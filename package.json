@@ -1,0 +1,25 @@
+{
+  "name": "com.zacharysnewman.leveling",
+  "version": "1.0.0",
+  "displayName": "Leveling",
+  "description": "Provides solid XP and Leveling management for a Unity project.",
+  "keywords": [
+    "xp",
+    "level",
+    "leveling",
+    "levelup",
+    "rpg"
+  ],
+  "author": {
+    "name": "zacharysnewman",
+    "url": "https://github.com/zacharysnewman"
+  },
+  "type": "library",
+  "samples": [
+    {
+      "displayName": "Example UI Usage",
+      "description": "Includes a demo scene to showcase how to use it with an example UI.",
+      "path": "Samples~/ExampleUIUsage"
+    }
+  ]
+}

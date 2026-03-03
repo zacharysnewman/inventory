@@ -27,7 +27,7 @@ namespace zacharysnewman.Inventory
         [Tooltip("The types of items this container accepts. Ignored when acceptsAllTypes is true.")]
         public List<ContainerType> acceptedTypes = new List<ContainerType>();
 
-        [Tooltip("When true, this container accepts any item regardless of its requiredContainerTypes. Use for general-purpose backpacks and grid inventories.")]
+        [Tooltip("When true, this container accepts any item regardless of its compatibleContainerTypes. Use for general-purpose backpacks and grid inventories.")]
         public bool acceptsAllTypes = false;
 
         public int capacity;

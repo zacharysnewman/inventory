@@ -16,7 +16,7 @@ namespace zacharysnewman.Inventory
         [Tooltip("Restricts which containers can hold this item.\n\n" +
                  "• One or more types — goes in containers that accept at least one matching type, OR any acceptsAllTypes container (overflow).\n" +
                  "• Empty — general item; only goes in acceptsAllTypes containers, never in dedicated typed slots.")]
-        public List<ContainerType> requiredContainerTypes = new List<ContainerType>();
+        public List<ContainerType> compatibleContainerTypes = new List<ContainerType>();
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]
         public int maxStackSize = 1;

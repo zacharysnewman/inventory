@@ -42,12 +42,12 @@ namespace zacharysnewman.Inventory
             bool typeOk;
             if (definition.acceptsAllTypes)
                 typeOk = true;
-            else if (item.requiredContainerTypes.Count == 0)
+            else if (item.compatibleContainerTypes.Count == 0)
                 typeOk = false;
             else
             {
                 typeOk = false;
-                foreach (var type in item.requiredContainerTypes)
+                foreach (var type in item.compatibleContainerTypes)
                 {
                     if (definition.acceptedTypes.Contains(type))
                     {

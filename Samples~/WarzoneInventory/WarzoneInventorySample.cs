@@ -2,7 +2,7 @@ using UnityEngine;
 using zacharysnewman.Inventory;
 
 /// <summary>
-/// Demonstrates a Call of Duty: Warzone-style inventory using the Inventory package.
+/// Demonstrates a Call of Duty: Warzone / DMZ-style inventory using the Inventory package.
 ///
 /// Container types and capacities:
 ///   Primary Weapon    — 1 slot  (ARs, LMGs, Snipers)
@@ -10,18 +10,25 @@ using zacharysnewman.Inventory;
 ///   Tertiary Weapon   — 1 slot  (RPGs, Mortars) — LOCKED until Large Backpack is picked up
 ///   Lethal            — 1 slot  (Frag, Semtex)
 ///   Tactical          — 1 slot  (Smoke, Stun)
-///   Armor Plates      — 5 slots (looted or bought at buy station)
+///   Armor Plates      — 5 slots (dedicated; looted or bought at buy station)
+///   General Backpack  — 6 slots (acceptsAllTypes; weapons overflow here, general items only go here)
 ///
 /// Currency: Cash — looted from eliminated players, spent at the buy station.
 ///
+/// Container ordering matters: dedicated slots are added BEFORE the general backpack,
+/// so TryAddItem fills dedicated slots first and only overflows to the backpack when they are full.
+///
+/// Type model:
+///   Typed item   (requiredContainerType = PrimaryWeapon) → dedicated slot first, backpack as overflow
+///   General item (requiredContainerType = null)          → backpack ONLY, never enters a dedicated slot
+///
 /// The demo shows:
-///   1. Dropping in with primary + secondary + equipment slots only
-///   2. Looting weapons and equipment from the ground
-///   3. Attempting to pick up a Tertiary weapon (RPG) — fails without a backpack
-///   4. Picking up a Large Backpack — unlocks the Tertiary slot
-///   5. Picking up the RPG successfully
-///   6. Visiting a buy station to purchase armor plates
-///   7. Swapping a primary weapon mid-game
+///   1. Dropping in with dedicated slots + general backpack
+///   2. Weapons filling dedicated slots first, then overflowing to the backpack
+///   3. General items (med kit, contract tablet) accepted only by the backpack
+///   4. Confirming a general item is rejected by a typed dedicated slot
+///   5. Picking up a Large Backpack — unlocks the Tertiary slot
+///   6. Visiting a buy station to purchase armor plates with cash
 ///
 /// Attach to the same GameObject as an Inventory component.
 /// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
@@ -44,38 +51,41 @@ public class WarzoneInventorySample : MonoBehaviour
     // ── Container Definitions ────────────────────────────────────────────────
     private ContainerDefinition _primarySlot;
     private ContainerDefinition _secondarySlot;
-    private ContainerDefinition _tertiarySlot;    // added when Large Backpack is looted
+    private ContainerDefinition _tertiarySlot;     // added when Large Backpack is looted
     private ContainerDefinition _lethalSlot;
     private ContainerDefinition _tacticalSlot;
-    private ContainerDefinition _armorPlatesSlot; // up to 5 plates
+    private ContainerDefinition _armorPlatesSlot;  // dedicated; capacity = total items
+    private ContainerDefinition _backpackSlot;     // general; acceptsAllTypes, capacity = slots
 
     // ── Currencies ───────────────────────────────────────────────────────────
     private Currency _cash;
 
-    // ── Primary Weapons ───────────────────────────────────────────────────────
+    // ── Primary Weapons (typed) ───────────────────────────────────────────────
     private Item _assaultRifle;
     private Item _lmg;
     private Item _sniperRifle;
 
-    // ── Secondary Weapons ─────────────────────────────────────────────────────
+    // ── Secondary Weapons (typed) ─────────────────────────────────────────────
     private Item _smg;
     private Item _pistol;
     private Item _shotgun;
 
-    // ── Tertiary Weapons (need Large Backpack) ────────────────────────────────
+    // ── Tertiary Weapons (typed, need Large Backpack) ─────────────────────────
     private Item _rpg;
     private Item _mortar;
 
-    // ── Lethal Equipment ──────────────────────────────────────────────────────
+    // ── Lethal / Tactical (typed) ─────────────────────────────────────────────
     private Item _fragGrenade;
     private Item _semtex;
-
-    // ── Tactical Equipment ────────────────────────────────────────────────────
     private Item _smokeGrenade;
     private Item _stunGrenade;
 
-    // ── Armor ─────────────────────────────────────────────────────────────────
-    private Item _armorPlate; // looted free or bought at buy station for $1,500
+    // ── Armor (typed) ─────────────────────────────────────────────────────────
+    private Item _armorPlate;
+
+    // ── General Items (null type — backpack only) ─────────────────────────────
+    private Item _medKit;
+    private Item _contractTablet;
 
     private void Start()
     {
@@ -88,53 +98,69 @@ public class WarzoneInventorySample : MonoBehaviour
 
     private void RunDemo()
     {
-        Debug.Log("=== Warzone Inventory Demo ===\n");
+        Debug.Log("=== Warzone / DMZ Inventory Demo ===\n");
 
-        // ── Drop in — no tertiary slot yet ───────────────────────────────────
+        // ── Drop in ───────────────────────────────────────────────────────────
+        // Dedicated slots first — they get priority in TryAddItem's container scan.
+        // General backpack last — typed items overflow here when dedicated slots are full.
         _inventory.AddContainer(_primarySlot);
         _inventory.AddContainer(_secondarySlot);
         _inventory.AddContainer(_lethalSlot);
         _inventory.AddContainer(_tacticalSlot);
         _inventory.AddContainer(_armorPlatesSlot);
+        _inventory.AddContainer(_backpackSlot);   // ← general slot, listed last
 
-        // Loot weapons and gear from the ground (no cost)
-        _inventory.TryAddItem(_assaultRifle);
-        _inventory.TryAddItem(_pistol);
-        _inventory.TryAddItem(_fragGrenade);
-        _inventory.TryAddItem(_smokeGrenade);
-        _inventory.TryAddItem(_armorPlate, 3);
-
-        // Looted $4,500 from an eliminated player
         _inventory.AddCurrency(_cash, 4500);
 
-        LogState("After initial loot");
+        // ── Loot first set of weapons — fill dedicated slots ──────────────────
+        _inventory.TryAddItem(_assaultRifle);  // → primary slot
+        _inventory.TryAddItem(_pistol);        // → secondary slot
+        _inventory.TryAddItem(_fragGrenade);   // → lethal slot
+        _inventory.TryAddItem(_smokeGrenade);  // → tactical slot
+        _inventory.TryAddItem(_armorPlate, 3); // → armor plates slot
 
-        // ── Try to pick up an RPG — fails without the tertiary slot ──────────
-        bool gotRpg = _inventory.TryAddItem(_rpg);
-        Debug.Log($"Picked up RPG (no backpack): {gotRpg}"); // false
+        LogState("After initial loot (dedicated slots filled)");
+
+        // ── Overflow: dedicated slots full → weapons go to backpack ───────────
+        // Primary slot is taken; a second primary-type weapon overflows to backpack.
+        bool gotLmg = _inventory.TryAddItem(_lmg);
+        Debug.Log($"Looted LMG (primary slot full) → backpack: {gotLmg}"); // true
+
+        // Secondary slot is taken; SMG overflows to backpack.
+        bool gotSmg = _inventory.TryAddItem(_smg);
+        Debug.Log($"Looted SMG (secondary slot full) → backpack: {gotSmg}"); // true
         Debug.Log("");
 
-        // ── Loot a Large Backpack — unlocks the tertiary slot ─────────────────
+        LogState("After overflow weapons");
+
+        // ── General items: backpack only, dedicated slots reject them ─────────
+        bool gotMedKit = _inventory.TryAddItem(_medKit);
+        Debug.Log($"Picked up Med Kit: {gotMedKit}"); // true — goes to backpack
+
+        bool gotTablet = _inventory.TryAddItem(_contractTablet);
+        Debug.Log($"Picked up Contract Tablet: {gotTablet}"); // true — goes to backpack
+
+        // Confirm a general item cannot enter a dedicated typed slot directly.
+        var primaryContainer = _inventory.GetContainer(_primarySlot);
+        bool medKitInPrimary = primaryContainer != null && primaryContainer.CanAdd(_medKit);
+        Debug.Log($"Can Med Kit enter Primary slot: {medKitInPrimary}"); // false
+        Debug.Log("");
+
+        LogState("After general items");
+
+        // ── Pick up Large Backpack → unlocks tertiary slot ────────────────────
         Debug.Log("[Picked up Large Backpack]\n");
         _inventory.AddContainer(_tertiarySlot);
 
-        gotRpg = _inventory.TryAddItem(_rpg);
-        Debug.Log($"Picked up RPG (large backpack): {gotRpg}"); // true
+        bool gotRpg = _inventory.TryAddItem(_rpg);
+        Debug.Log($"Picked up RPG → tertiary slot: {gotRpg}"); // true
         Debug.Log("");
 
-        LogState("After Large Backpack + RPG");
-
-        // ── Buy Station — purchase 2 more armor plates ────────────────────────
+        // ── Buy station ───────────────────────────────────────────────────────
         _inventory.TryPurchase(_armorPlate); // −$1,500
         _inventory.TryPurchase(_armorPlate); // −$1,500
 
-        LogState("After buy station (2 armor plates)");
-
-        // ── Swap primary: drop AR, pick up Sniper Rifle ───────────────────────
-        _inventory.TryRemoveItem(_assaultRifle);
-        _inventory.TryAddItem(_sniperRifle);
-
-        LogState("After swapping AR → Sniper Rifle");
+        LogState("Final state");
     }
 
     // ── Definitions ──────────────────────────────────────────────────────────
@@ -148,6 +174,7 @@ public class WarzoneInventorySample : MonoBehaviour
         _tacticalType   = MakeType("Tactical");
         _armorPlateType = MakeType("ArmorPlate");
 
+        // Dedicated typed slots
         _primarySlot     = MakeContainer("Primary Weapon",   _primaryType,    1);
         _secondarySlot   = MakeContainer("Secondary Weapon", _secondaryType,  1);
         _tertiarySlot    = MakeContainer("Tertiary Weapon",  _tertiaryType,   1);
@@ -155,49 +182,55 @@ public class WarzoneInventorySample : MonoBehaviour
         _tacticalSlot    = MakeContainer("Tactical",         _tacticalType,   1);
         _armorPlatesSlot = MakeContainer("Armor Plates",     _armorPlateType, 5);
 
+        // General backpack — accepts any item type; capacity measured in slots
+        _backpackSlot = ScriptableObject.CreateInstance<ContainerDefinition>();
+        _backpackSlot.displayName   = "Backpack";
+        _backpackSlot.acceptsAllTypes = true;
+        _backpackSlot.capacity      = 6;
+        _backpackSlot.capacityMode  = ContainerCapacityMode.Slots;
+
         _cash = ScriptableObject.CreateInstance<Currency>();
         _cash.displayName = "Cash";
 
-        // Primary weapons — looted, no currency cost
+        // Typed weapons — go in their dedicated slot, overflow to backpack
         _assaultRifle = MakeItem("Assault Rifle", _primaryType);
         _lmg          = MakeItem("LMG",           _primaryType);
         _sniperRifle  = MakeItem("Sniper Rifle",  _primaryType);
-
-        // Secondary weapons
-        _smg     = MakeItem("SMG",     _secondaryType);
-        _pistol  = MakeItem("Pistol",  _secondaryType);
-        _shotgun = MakeItem("Shotgun", _secondaryType);
-
-        // Tertiary weapons (require Large Backpack to carry)
-        _rpg    = MakeItem("RPG",    _tertiaryType);
-        _mortar = MakeItem("Mortar", _tertiaryType);
-
-        // Lethal / Tactical
+        _smg          = MakeItem("SMG",           _secondaryType);
+        _pistol       = MakeItem("Pistol",        _secondaryType);
+        _shotgun      = MakeItem("Shotgun",       _secondaryType);
+        _rpg          = MakeItem("RPG",           _tertiaryType);
+        _mortar       = MakeItem("Mortar",        _tertiaryType);
         _fragGrenade  = MakeItem("Frag Grenade",  _lethalType);
         _semtex       = MakeItem("Semtex",        _lethalType);
         _smokeGrenade = MakeItem("Smoke Grenade", _tacticalType);
         _stunGrenade  = MakeItem("Stun Grenade",  _tacticalType);
+        _armorPlate   = MakeItem("Armor Plate",   _armorPlateType, (_cash, 1500));
 
-        // Armor plate — lootable free, or $1,500 each at the buy station
-        _armorPlate = MakeItem("Armor Plate", _armorPlateType, (_cash, 1500));
+        // General items (null type) — backpack only, never enter a dedicated slot
+        _medKit         = MakeItem("Med Kit",          null);
+        _contractTablet = MakeItem("Contract Tablet",  null);
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────
 
     private void LogState(string label)
     {
+        var backpack = _inventory.GetContainer(_backpackSlot);
+        int backpackUsed = backpack?.UsedCapacity ?? 0;
+
         Debug.Log($"── {label} ──");
         Debug.Log($"  Cash:          ${_inventory.GetCurrency(_cash)}");
-        Debug.Log($"  Primary:       {Equipped(_assaultRifle, _lmg, _sniperRifle)}");
-        Debug.Log($"  Secondary:     {Equipped(_smg, _pistol, _shotgun)}");
-        Debug.Log($"  Tertiary:      {Equipped(_rpg, _mortar)}");
+        Debug.Log($"  Primary slot:  {Equipped(_assaultRifle, _lmg, _sniperRifle)}");
+        Debug.Log($"  Secondary slot:{Equipped(_smg, _pistol, _shotgun)}");
+        Debug.Log($"  Tertiary slot: {Equipped(_rpg, _mortar)}");
         Debug.Log($"  Lethal:        {Equipped(_fragGrenade, _semtex)}");
         Debug.Log($"  Tactical:      {Equipped(_smokeGrenade, _stunGrenade)}");
         Debug.Log($"  Armor Plates:  {_inventory.GetItemCount(_armorPlate)}/5");
+        Debug.Log($"  Backpack:      {backpackUsed}/6 slots used");
         Debug.Log("");
     }
 
-    /// Returns the display name of the first item from <paramref name="items"/> that is in the inventory.
     private string Equipped(params Item[] items)
     {
         foreach (var item in items)

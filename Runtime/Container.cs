@@ -40,7 +40,6 @@ namespace zacharysnewman.Inventory
         public bool CanAdd(Item item, int quantity = 1)
         {
             bool typeOk = definition.acceptsAllTypes
-                || item.requiredContainerType == null
                 || item.requiredContainerType == definition.type;
             if (!typeOk) return false;
 

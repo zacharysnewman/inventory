@@ -13,7 +13,9 @@ namespace zacharysnewman.Inventory
     {
         public string displayName;
 
-        [Tooltip("The container type this item can be stored in (e.g. Quiver for arrows, Bomb Bag for bombs). Leave null to allow this item in any container.")]
+        [Tooltip("Restricts which containers can hold this item.\n\n" +
+                 "• Typed (e.g. Quiver) — goes in matching typed containers OR any acceptsAllTypes container (overflow).\n" +
+                 "• Null — general item; only goes in acceptsAllTypes containers, never in dedicated typed slots.")]
         public ContainerType requiredContainerType;
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]

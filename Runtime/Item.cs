@@ -14,9 +14,9 @@ namespace zacharysnewman.Inventory
         public string displayName;
 
         [Tooltip("Restricts which containers can hold this item.\n\n" +
-                 "• Typed (e.g. Quiver) — goes in matching typed containers OR any acceptsAllTypes container (overflow).\n" +
-                 "• Null — general item; only goes in acceptsAllTypes containers, never in dedicated typed slots.")]
-        public ContainerType requiredContainerType;
+                 "• One or more types — goes in containers that accept at least one matching type, OR any acceptsAllTypes container (overflow).\n" +
+                 "• Empty — general item; only goes in acceptsAllTypes containers, never in dedicated typed slots.")]
+        public List<ContainerType> requiredContainerTypes = new List<ContainerType>();
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]
         public int maxStackSize = 1;

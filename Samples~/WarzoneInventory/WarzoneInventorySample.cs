@@ -252,7 +252,7 @@ public class WarzoneInventorySample : MonoBehaviour
     {
         var d = ScriptableObject.CreateInstance<ContainerDefinition>();
         d.displayName = displayName;
-        d.type = type;
+        d.acceptedTypes.Add(type);
         d.capacity = capacity;
         return d;
     }
@@ -262,7 +262,8 @@ public class WarzoneInventorySample : MonoBehaviour
     {
         var item = ScriptableObject.CreateInstance<Item>();
         item.displayName = displayName;
-        item.requiredContainerType = type;
+        if (type != null)
+            item.requiredContainerTypes.Add(type);
         item.maxStackSize = 1;
         if (cost.currency != null)
             item.cost.Add(new CurrencyAmount { currency = cost.currency, amount = cost.amount });

@@ -39,8 +39,23 @@ namespace zacharysnewman.Inventory
 
         public bool CanAdd(Item item, int quantity = 1)
         {
-            bool typeOk = definition.acceptsAllTypes
-                || item.requiredContainerType == definition.type;
+            bool typeOk;
+            if (definition.acceptsAllTypes)
+                typeOk = true;
+            else if (item.requiredContainerTypes.Count == 0)
+                typeOk = false;
+            else
+            {
+                typeOk = false;
+                foreach (var type in item.requiredContainerTypes)
+                {
+                    if (definition.acceptedTypes.Contains(type))
+                    {
+                        typeOk = true;
+                        break;
+                    }
+                }
+            }
             if (!typeOk) return false;
 
             if (definition.capacityMode == ContainerCapacityMode.TotalItems)

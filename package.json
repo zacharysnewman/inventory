@@ -18,9 +18,14 @@
   "type": "library",
   "samples": [
     {
-      "displayName": "Example Usage",
-      "description": "A demo scene showing container setup, item creation, currency management, and purchases.",
-      "path": "Samples~/ExampleUsage"
+      "displayName": "Zelda-Style Inventory",
+      "description": "Bomb Bags, Quivers, and Wallets in three sizes each; sword and bow equipment slots; collectible heart containers; potion bottles; rupee-gated shop purchases; and bomb-bag upgrade with item transfer.",
+      "path": "Samples~/ZeldaInventory"
+    },
+    {
+      "displayName": "Warzone-Style Inventory",
+      "description": "Primary, secondary, and tertiary weapon slots (tertiary gated behind a Large Backpack pickup); lethal and tactical equipment slots; armor plate storage; and cash-based buy-station purchases.",
+      "path": "Samples~/WarzoneInventory"
     }
   ]
 }

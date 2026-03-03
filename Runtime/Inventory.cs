@@ -21,6 +21,27 @@ namespace zacharysnewman.Inventory
                 _containers.Add(new Container { definition = def });
         }
 
+        // ── Container Management ─────────────────────────────────────────────
+
+        /// <summary>All active containers (read-only view).</summary>
+        public IReadOnlyList<Container> Containers => _containers;
+
+        /// <summary>Returns the first container backed by <paramref name="definition"/>, or null.</summary>
+        public Container GetContainer(ContainerDefinition definition)
+            => _containers.Find(c => c.definition == definition);
+
+        /// <summary>Adds a new container backed by <paramref name="definition"/> at runtime.</summary>
+        public void AddContainer(ContainerDefinition definition)
+            => _containers.Add(new Container { definition = definition });
+
+        /// <summary>
+        /// Removes all containers backed by <paramref name="definition"/>.
+        /// Items inside are discarded — transfer them first if you need to preserve them.
+        /// Returns true if at least one container was removed.
+        /// </summary>
+        public bool RemoveContainer(ContainerDefinition definition)
+            => _containers.RemoveAll(c => c.definition == definition) > 0;
+
         // ── Item Management ──────────────────────────────────────────────────
 
         /// <summary>Adds <paramref name="quantity"/> of <paramref name="item"/> to the first container that accepts it.</summary>

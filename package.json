@@ -1,14 +1,15 @@
 {
-  "name": "com.zacharysnewman.leveling",
+  "name": "com.zacharysnewman.inventory",
   "version": "1.0.0",
-  "displayName": "Leveling",
-  "description": "Provides solid XP and Leveling management for a Unity project.",
+  "displayName": "Inventory",
+  "description": "A flexible and configurable inventory system for Unity supporting typed containers (Bomb Bag, Quiver, Wallet, etc.), stackable items, multiple currency types, and currency-gated purchases.",
   "keywords": [
-    "xp",
-    "level",
-    "leveling",
-    "levelup",
-    "rpg"
+    "inventory",
+    "items",
+    "containers",
+    "currency",
+    "rpg",
+    "game"
   ],
   "author": {
     "name": "zacharysnewman",
@@ -17,9 +18,9 @@
   "type": "library",
   "samples": [
     {
-      "displayName": "Example UI Usage",
-      "description": "Includes a demo scene to showcase how to use it with an example UI.",
-      "path": "Samples~/ExampleUIUsage"
+      "displayName": "Example Usage",
+      "description": "A demo scene showing container setup, item creation, currency management, and purchases.",
+      "path": "Samples~/ExampleUsage"
     }
   ]
 }

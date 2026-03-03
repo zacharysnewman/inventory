@@ -1,21 +1,123 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Inventory
+namespace zacharysnewman.Inventory
 {
+    /// <summary>
+    /// MonoBehaviour that manages a collection of typed containers and a currency wallet.
+    /// Assign ContainerDefinition assets in the Inspector to configure which containers
+    /// (e.g. Bomb Bag, Quiver, Wallet) this inventory exposes at runtime.
+    /// </summary>
     public class Inventory : MonoBehaviour
     {
-        // Start is called before the first frame update
-        void Start()
-        {
+        [SerializeField] private List<ContainerDefinition> containerDefinitions = new List<ContainerDefinition>();
 
+        private readonly List<Container> _containers = new List<Container>();
+        private readonly Dictionary<Currency, int> _currencies = new Dictionary<Currency, int>();
+
+        private void Awake()
+        {
+            foreach (var def in containerDefinitions)
+                _containers.Add(new Container { definition = def });
         }
 
-        // Update is called once per frame
-        void Update()
-        {
+        // ── Item Management ──────────────────────────────────────────────────
 
+        /// <summary>Adds <paramref name="quantity"/> of <paramref name="item"/> to the first container that accepts it.</summary>
+        public bool TryAddItem(Item item, int quantity = 1)
+        {
+            foreach (var container in _containers)
+                if (container.TryAdd(item, quantity))
+                    return true;
+            return false;
+        }
+
+        /// <summary>Removes <paramref name="quantity"/> of <paramref name="item"/> from the first container that has it.</summary>
+        public bool TryRemoveItem(Item item, int quantity = 1)
+        {
+            foreach (var container in _containers)
+                if (container.TryRemove(item, quantity))
+                    return true;
+            return false;
+        }
+
+        /// <summary>Returns the total count of <paramref name="item"/> across all containers.</summary>
+        public int GetItemCount(Item item)
+        {
+            int total = 0;
+            foreach (var container in _containers)
+                total += container.GetQuantity(item);
+            return total;
+        }
+
+        // ── Currency Management ──────────────────────────────────────────────
+
+        /// <summary>Returns the current amount of <paramref name="currency"/> held.</summary>
+        public int GetCurrency(Currency currency)
+        {
+            _currencies.TryGetValue(currency, out int amount);
+            return amount;
+        }
+
+        /// <summary>Adds <paramref name="amount"/> of <paramref name="currency"/>.</summary>
+        public void AddCurrency(Currency currency, int amount)
+        {
+            if (!_currencies.ContainsKey(currency))
+                _currencies[currency] = 0;
+            _currencies[currency] += amount;
+        }
+
+        /// <summary>
+        /// Deducts <paramref name="amount"/> of <paramref name="currency"/>.
+        /// Returns false and makes no change if funds are insufficient.
+        /// </summary>
+        public bool TrySpendCurrency(Currency currency, int amount)
+        {
+            if (GetCurrency(currency) < amount)
+                return false;
+            _currencies[currency] -= amount;
+            return true;
+        }
+
+        /// <summary>Returns true if the inventory holds enough of every currency in <paramref name="item"/>'s cost list.</summary>
+        public bool CanAfford(Item item, int quantity = 1)
+        {
+            foreach (var cost in item.cost)
+                if (GetCurrency(cost.currency) < cost.amount * quantity)
+                    return false;
+            return true;
+        }
+
+        // ── Purchase ─────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Attempts to purchase <paramref name="quantity"/> of <paramref name="item"/>:
+        /// checks affordability and container space, deducts currency, then adds the item.
+        /// All checks are atomic — nothing is deducted if the item cannot fit.
+        /// </summary>
+        public bool TryPurchase(Item item, int quantity = 1)
+        {
+            if (!CanAfford(item, quantity))
+                return false;
+
+            Container target = null;
+            foreach (var container in _containers)
+            {
+                if (container.CanAdd(item, quantity))
+                {
+                    target = container;
+                    break;
+                }
+            }
+
+            if (target == null)
+                return false;
+
+            foreach (var cost in item.cost)
+                TrySpendCurrency(cost.currency, cost.amount * quantity);
+
+            target.TryAdd(item, quantity);
+            return true;
         }
     }
 }

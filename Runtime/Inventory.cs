@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +15,23 @@ namespace zacharysnewman.Inventory
 
         private readonly List<Container> _containers = new List<Container>();
         private readonly Dictionary<Currency, int> _currencies = new Dictionary<Currency, int>();
+
+        // ── Events ───────────────────────────────────────────────────────────
+
+        /// <summary>Raised after an item is successfully added. Reports the item and its new global count.</summary>
+        public event Action<Item, int> OnItemAdded;
+
+        /// <summary>Raised after an item is successfully removed. Reports the item and its new global count.</summary>
+        public event Action<Item, int> OnItemRemoved;
+
+        /// <summary>Raised after any currency amount changes. Reports the currency and its new total.</summary>
+        public event Action<Currency, int> OnCurrencyChanged;
+
+        /// <summary>Raised after a container is added at runtime.</summary>
+        public event Action<Container> OnContainerAdded;
+
+        /// <summary>Raised after a container is removed at runtime.</summary>
+        public event Action<ContainerDefinition> OnContainerRemoved;
 
         private void Awake()
         {
@@ -32,7 +50,11 @@ namespace zacharysnewman.Inventory
 
         /// <summary>Adds a new container backed by <paramref name="definition"/> at runtime.</summary>
         public void AddContainer(ContainerDefinition definition)
-            => _containers.Add(new Container { definition = definition });
+        {
+            var container = new Container { definition = definition };
+            _containers.Add(container);
+            OnContainerAdded?.Invoke(container);
+        }
 
         /// <summary>
         /// Removes all containers backed by <paramref name="definition"/>.
@@ -40,7 +62,11 @@ namespace zacharysnewman.Inventory
         /// Returns true if at least one container was removed.
         /// </summary>
         public bool RemoveContainer(ContainerDefinition definition)
-            => _containers.RemoveAll(c => c.definition == definition) > 0;
+        {
+            bool removed = _containers.RemoveAll(c => c.definition == definition) > 0;
+            if (removed) OnContainerRemoved?.Invoke(definition);
+            return removed;
+        }
 
         // ── Item Management ──────────────────────────────────────────────────
 
@@ -48,8 +74,13 @@ namespace zacharysnewman.Inventory
         public bool TryAddItem(Item item, int quantity = 1)
         {
             foreach (var container in _containers)
+            {
                 if (container.TryAdd(item, quantity))
+                {
+                    OnItemAdded?.Invoke(item, GetItemCount(item));
                     return true;
+                }
+            }
             return false;
         }
 
@@ -57,8 +88,13 @@ namespace zacharysnewman.Inventory
         public bool TryRemoveItem(Item item, int quantity = 1)
         {
             foreach (var container in _containers)
+            {
                 if (container.TryRemove(item, quantity))
+                {
+                    OnItemRemoved?.Invoke(item, GetItemCount(item));
                     return true;
+                }
+            }
             return false;
         }
 
@@ -86,6 +122,7 @@ namespace zacharysnewman.Inventory
             if (!_currencies.ContainsKey(currency))
                 _currencies[currency] = 0;
             _currencies[currency] += amount;
+            OnCurrencyChanged?.Invoke(currency, _currencies[currency]);
         }
 
         /// <summary>
@@ -97,6 +134,7 @@ namespace zacharysnewman.Inventory
             if (GetCurrency(currency) < amount)
                 return false;
             _currencies[currency] -= amount;
+            OnCurrencyChanged?.Invoke(currency, _currencies[currency]);
             return true;
         }
 
@@ -138,6 +176,7 @@ namespace zacharysnewman.Inventory
                 TrySpendCurrency(cost.currency, cost.amount * quantity);
 
             target.TryAdd(item, quantity);
+            OnItemAdded?.Invoke(item, GetItemCount(item));
             return true;
         }
     }

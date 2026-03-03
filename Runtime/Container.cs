@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +12,12 @@ namespace zacharysnewman.Inventory
     public class Container
     {
         public ContainerDefinition definition;
+
+        /// <summary>
+        /// Raised after any successful mutation (TryAdd or TryRemove).
+        /// Subscribe to this for per-container UI (e.g. a bomb counter tied to a specific bag).
+        /// </summary>
+        public event Action OnChanged;
 
         private readonly List<ItemStack> _stacks = new List<ItemStack>();
 
@@ -51,7 +58,7 @@ namespace zacharysnewman.Inventory
                 int toAdd = Mathf.Min(space, remaining);
                 stack.quantity += toAdd;
                 remaining -= toAdd;
-                if (remaining == 0) return true;
+                if (remaining == 0) break;
             }
 
             // Open new stacks for the remainder
@@ -62,6 +69,7 @@ namespace zacharysnewman.Inventory
                 remaining -= toAdd;
             }
 
+            OnChanged?.Invoke();
             return true;
         }
 
@@ -81,6 +89,7 @@ namespace zacharysnewman.Inventory
                     _stacks.RemoveAt(i);
             }
 
+            OnChanged?.Invoke();
             return true;
         }
 

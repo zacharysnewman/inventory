@@ -26,6 +26,11 @@
       "displayName": "Warzone-Style Inventory",
       "description": "Primary, secondary, and tertiary weapon slots (tertiary gated behind a Large Backpack pickup); lethal and tactical equipment slots; armor plate storage; and cash-based buy-station purchases.",
       "path": "Samples~/WarzoneInventory"
+    },
+    {
+      "displayName": "Inventory Renderer",
+      "description": "InventoryRenderer MonoBehaviour with Inspector-wired TMP_Text bindings for item counts, currency amounts, and container slot contents/visibility. Driven entirely by Inventory events — no polling.",
+      "path": "Samples~/InventoryRenderer"
     }
   ]
 }

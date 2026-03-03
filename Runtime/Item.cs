@@ -13,7 +13,7 @@ namespace zacharysnewman.Inventory
     {
         public string displayName;
 
-        [Tooltip("The container type this item can be stored in (e.g. Quiver for arrows, Bomb Bag for bombs).")]
+        [Tooltip("The container type this item can be stored in (e.g. Quiver for arrows, Bomb Bag for bombs). Leave null to allow this item in any container.")]
         public ContainerType requiredContainerType;
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]

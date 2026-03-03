@@ -6,8 +6,7 @@ namespace zacharysnewman.Inventory
 {
     /// <summary>
     /// A runtime container that holds items according to its ContainerDefinition.
-    /// Capacity is measured in total item count across all stacks.
-    /// Items are only accepted when their requiredContainerType matches this container's type.
+    /// Capacity mode and type acceptance are controlled by the ContainerDefinition.
     /// </summary>
     public class Container
     {
@@ -27,6 +26,8 @@ namespace zacharysnewman.Inventory
         {
             get
             {
+                if (definition.capacityMode == ContainerCapacityMode.Slots)
+                    return _stacks.Count;
                 int used = 0;
                 foreach (var stack in _stacks)
                     used += stack.quantity;
@@ -38,8 +39,24 @@ namespace zacharysnewman.Inventory
 
         public bool CanAdd(Item item, int quantity = 1)
         {
-            return item.requiredContainerType == definition.type
-                && RemainingCapacity >= quantity;
+            bool typeOk = definition.acceptsAllTypes
+                || item.requiredContainerType == null
+                || item.requiredContainerType == definition.type;
+            if (!typeOk) return false;
+
+            if (definition.capacityMode == ContainerCapacityMode.TotalItems)
+                return RemainingCapacity >= quantity;
+
+            // Slots mode: predict how many new stack slots would be opened
+            int remaining = quantity;
+            foreach (var stack in _stacks)
+            {
+                if (stack.item != item) continue;
+                remaining -= item.maxStackSize - stack.quantity;
+                if (remaining <= 0) return true;
+            }
+            int newSlotsNeeded = Mathf.CeilToInt((float)remaining / item.maxStackSize);
+            return _stacks.Count + newSlotsNeeded <= definition.capacity;
         }
 
         public bool TryAdd(Item item, int quantity = 1)

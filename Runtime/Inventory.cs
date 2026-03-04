@@ -33,6 +33,9 @@ namespace zacharysnewman.Inventory
         /// <summary>Raised after a container is removed at runtime.</summary>
         public event Action<ContainerDefinition> OnContainerRemoved;
 
+        /// <summary>Raised after an item is moved between two containers within this inventory. Reports the item, source container, and destination container.</summary>
+        public event Action<Item, Container, Container> OnItemMoved;
+
         private void Awake()
         {
             foreach (var def in containerDefinitions)
@@ -128,6 +131,42 @@ namespace zacharysnewman.Inventory
         /// </summary>
         public bool TryTransferFrom(Inventory source, Item item, int quantity = 1)
             => source.TryTransferTo(this, item, quantity);
+
+        /// <summary>
+        /// Adds <paramref name="quantity"/> of <paramref name="item"/> directly into <paramref name="container"/>,
+        /// which must belong to this inventory. Fires <see cref="OnItemAdded"/>.
+        /// </summary>
+        public bool TryAddToContainer(Container container, Item item, int quantity = 1)
+        {
+            if (!_containers.Contains(container)) return false;
+            if (!container.TryAdd(item, quantity)) return false;
+            OnItemAdded?.Invoke(item, GetItemCount(item));
+            return true;
+        }
+
+        /// <summary>
+        /// Removes <paramref name="quantity"/> of <paramref name="item"/> directly from <paramref name="container"/>,
+        /// which must belong to this inventory. Fires <see cref="OnItemRemoved"/>.
+        /// </summary>
+        public bool TryRemoveFromContainer(Container container, Item item, int quantity = 1)
+        {
+            if (!_containers.Contains(container)) return false;
+            if (!container.TryRemove(item, quantity)) return false;
+            OnItemRemoved?.Invoke(item, GetItemCount(item));
+            return true;
+        }
+
+        /// <summary>
+        /// Moves <paramref name="quantity"/> of <paramref name="item"/> from <paramref name="from"/> to <paramref name="to"/>,
+        /// both of which must belong to this inventory. Atomic — fires <see cref="OnItemMoved"/> on success.
+        /// </summary>
+        public bool TryMoveItem(Container from, Container to, Item item, int quantity = 1)
+        {
+            if (!_containers.Contains(from) || !_containers.Contains(to)) return false;
+            if (!from.TryMoveTo(to, item, quantity)) return false;
+            OnItemMoved?.Invoke(item, from, to);
+            return true;
+        }
 
         /// <summary>Returns the total count of <paramref name="item"/> across all containers.</summary>
         public int GetItemCount(Item item)

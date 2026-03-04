@@ -124,6 +124,19 @@ namespace zacharysnewman.Inventory
             return true;
         }
 
+        /// <summary>
+        /// Moves <paramref name="quantity"/> of <paramref name="item"/> from this container into <paramref name="target"/>.
+        /// Atomic — nothing changes if either side cannot complete the operation.
+        /// </summary>
+        public bool TryMoveTo(Container target, Item item, int quantity = 1)
+        {
+            if (GetQuantity(item) < quantity) return false;
+            if (!target.CanAdd(item, quantity)) return false;
+            TryRemove(item, quantity);
+            target.TryAdd(item, quantity);
+            return true;
+        }
+
         public int GetQuantity(Item item)
         {
             int total = 0;

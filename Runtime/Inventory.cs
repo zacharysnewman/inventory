@@ -70,6 +70,15 @@ namespace zacharysnewman.Inventory
 
         // ── Item Management ──────────────────────────────────────────────────
 
+        /// <summary>Returns true if at least one container in this inventory can accept <paramref name="quantity"/> of <paramref name="item"/>.</summary>
+        public bool CanAddItem(Item item, int quantity = 1)
+        {
+            foreach (var container in _containers)
+                if (container.CanAdd(item, quantity))
+                    return true;
+            return false;
+        }
+
         /// <summary>Adds <paramref name="quantity"/> of <paramref name="item"/> to the first container that accepts it.</summary>
         public bool TryAddItem(Item item, int quantity = 1)
         {
@@ -97,6 +106,28 @@ namespace zacharysnewman.Inventory
             }
             return false;
         }
+
+        /// <summary>
+        /// Transfers <paramref name="quantity"/> of <paramref name="item"/> from this inventory into <paramref name="target"/>.
+        /// Atomic — nothing changes if this inventory lacks the item or <paramref name="target"/> cannot accept it.
+        /// Returns true on success.
+        /// </summary>
+        public bool TryTransferTo(Inventory target, Item item, int quantity = 1)
+        {
+            if (GetItemCount(item) < quantity) return false;
+            if (!target.CanAddItem(item, quantity)) return false;
+
+            TryRemoveItem(item, quantity);
+            target.TryAddItem(item, quantity);
+            return true;
+        }
+
+        /// <summary>
+        /// Transfers <paramref name="quantity"/> of <paramref name="item"/> from <paramref name="source"/> into this inventory.
+        /// Convenience wrapper — delegates to <see cref="TryTransferTo"/>.
+        /// </summary>
+        public bool TryTransferFrom(Inventory source, Item item, int quantity = 1)
+            => source.TryTransferTo(this, item, quantity);
 
         /// <summary>Returns the total count of <paramref name="item"/> across all containers.</summary>
         public int GetItemCount(Item item)

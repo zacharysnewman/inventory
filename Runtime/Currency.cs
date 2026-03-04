@@ -11,5 +11,7 @@ namespace zacharysnewman.Inventory
     public class Currency : ScriptableObject
     {
         public string displayName;
+        [Tooltip("Maximum amount that can be held. 0 = no limit.")]
+        public int maxAmount = 0;
     }
 }

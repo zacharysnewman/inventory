@@ -101,7 +101,7 @@ public class ZeldaInventorySample : MonoBehaviour
 
         // Start with 3 heart containers and some rupees
         _inventory.TryAddItem(_heartContainer, 3);
-        _inventory.AddCurrency(_rupees, 200);
+        _inventory.TryAddCurrency(_rupees, 200);
 
         LogState("Start of adventure");
 

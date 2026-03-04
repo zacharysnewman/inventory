@@ -186,13 +186,26 @@ namespace zacharysnewman.Inventory
             return amount;
         }
 
-        /// <summary>Adds <paramref name="amount"/> of <paramref name="currency"/>.</summary>
-        public void AddCurrency(Currency currency, int amount)
+        /// <summary>
+        /// Adds <paramref name="amount"/> of <paramref name="currency"/>.
+        /// Returns false and makes no change if the currency has a max and is already at capacity.
+        /// If adding would exceed the max, the amount is clamped to the cap.
+        /// </summary>
+        public bool TryAddCurrency(Currency currency, int amount)
         {
             if (!_currencies.ContainsKey(currency))
                 _currencies[currency] = 0;
-            _currencies[currency] += amount;
+
+            if (currency.maxAmount > 0 && _currencies[currency] >= currency.maxAmount)
+                return false;
+
+            if (currency.maxAmount > 0)
+                _currencies[currency] = Mathf.Min(_currencies[currency] + amount, currency.maxAmount);
+            else
+                _currencies[currency] += amount;
+
             OnCurrencyChanged?.Invoke(currency, _currencies[currency]);
+            return true;
         }
 
         /// <summary>

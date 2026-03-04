@@ -54,7 +54,7 @@ inventory.TryAddItem(bomb, 5);
 inventory.TryRemoveItem(bomb, 1);
 
 // Check and spend currency
-inventory.AddCurrency(rupees, 100);
+inventory.TryAddCurrency(rupees, 100);
 inventory.TrySpendCurrency(rupees, 20);
 
 // Purchase (atomic: checks affordability and capacity before deducting)

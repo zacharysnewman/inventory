@@ -7,19 +7,24 @@ using zacharysnewman.Inventory;
 /// Container types and sizes:
 ///   Bomb Bag  — Small (10), Large (20), Biggest (30)
 ///   Quiver    — Small (30), Large (40), Biggest (50)
-///   Wallet    — Small (99 rupees max), Large (200), Giant (500)
 ///   Equipment — Sword slot, Bow slot (capacity 1 each)
 ///   Hearts    — collectible heart containers (max 20)
 ///   Bottle    — 4 bottle slots for potions
 ///
-/// Currency: Rupees — consumed when purchasing bombs, arrows, or potions.
+/// Currency: Rupees — fungible count with a tiered cap (wallet tier).
+///   Small Wallet  →  99 rupee max
+///   Large Wallet  → 200 rupee max
+///   Giant Wallet  → 500 rupee max
+///   Upgrading the wallet sets a new maxAmount on the Currency directly.
+///   Currencies are not items and do not occupy container slots.
 ///
 /// The demo shows:
-///   1. Starting with a small bomb bag, small quiver, and small wallet
+///   1. Starting with a small bomb bag, small quiver, and small wallet (rupee cap 99)
 ///   2. Looting the Master Sword and Hero's Bow
 ///   3. Buying bombs, arrows, and a potion at a shop
 ///   4. Upgrading the bomb bag (small → large), transferring existing bombs
-///   5. Earning a heart container after defeating a boss
+///   5. Upgrading the wallet (small → large), raising the rupee cap to 200
+///   6. Earning a heart container after defeating a boss
 ///
 /// Attach to the same GameObject as an Inventory component.
 /// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
@@ -50,11 +55,6 @@ public class ZeldaInventorySample : MonoBehaviour
     private ContainerDefinition _largeQuiver;     // 40 arrows
     private ContainerDefinition _biggestQuiver;   // 50 arrows
 
-    // Wallets — upgrading raises the rupee cap enforced by the container
-    private ContainerDefinition _smallWallet;     //  99 rupees max (unused beyond capacity demo)
-    private ContainerDefinition _largeWallet;     // 200 rupees max
-    private ContainerDefinition _giantWallet;     // 500 rupees max
-
     // Equipment — one slot per item type; capacity 1 means "equipped or not"
     private ContainerDefinition _swordSlot;
     private ContainerDefinition _bowSlot;
@@ -64,6 +64,13 @@ public class ZeldaInventorySample : MonoBehaviour
 
     // Bottles — up to 4 potions stored at once
     private ContainerDefinition _bottleSlots;
+
+    // ── Wallet tiers (rupee caps) ─────────────────────────────────────────────
+    // Wallets are not containers — rupees are fungible and don't occupy slots.
+    // The tier is modelled as a maxAmount on the Currency itself.
+    private const int SmallWalletMax  =  99;
+    private const int LargeWalletMax  = 200;
+    private const int GiantWalletMax  = 500;
 
     // ── Currencies ───────────────────────────────────────────────────────────
     private Currency _rupees;
@@ -93,15 +100,15 @@ public class ZeldaInventorySample : MonoBehaviour
         // Give the player a starting loadout
         _inventory.AddContainer(_smallBombBag);
         _inventory.AddContainer(_smallQuiver);
-        _inventory.AddContainer(_smallWallet);
         _inventory.AddContainer(_swordSlot);
         _inventory.AddContainer(_bowSlot);
         _inventory.AddContainer(_heartSlot);
         _inventory.AddContainer(_bottleSlots);
 
-        // Start with 3 heart containers and some rupees
+        // Start with a small wallet (99 rupee cap) and some rupees
+        _rupees.maxAmount = SmallWalletMax;
         _inventory.TryAddItem(_heartContainer, 3);
-        _inventory.TryAddCurrency(_rupees, 200);
+        _inventory.TryAddCurrency(_rupees, 200); // clamped to 99 by small wallet
 
         LogState("Start of adventure");
 
@@ -127,6 +134,14 @@ public class ZeldaInventorySample : MonoBehaviour
 
         LogState("After upgrading to Large Bomb Bag");
 
+        // ── Upgrade the wallet ────────────────────────────────────────────────
+        // Wallets are not containers — just raise the rupee cap on the Currency.
+        // Rupees already held are kept; the new cap allows earning more.
+        _rupees.maxAmount = LargeWalletMax;
+        _inventory.TryAddCurrency(_rupees, 50); // could now hold up to 200
+
+        LogState("After upgrading to Large Wallet");
+
         // ── Defeat a boss — earn a heart container ────────────────────────────
         _inventory.TryAddItem(_heartContainer);
 
@@ -151,10 +166,6 @@ public class ZeldaInventorySample : MonoBehaviour
         _largeQuiver   = MakeContainer("Large Quiver",   _quiverType, 40);
         _biggestQuiver = MakeContainer("Biggest Quiver", _quiverType, 50);
 
-        _smallWallet = MakeContainer("Small Wallet", _equipmentType,  99);
-        _largeWallet = MakeContainer("Large Wallet", _equipmentType, 200);
-        _giantWallet = MakeContainer("Giant Wallet", _equipmentType, 500);
-
         _swordSlot   = MakeContainer("Sword Slot",   _equipmentType, 1);
         _bowSlot     = MakeContainer("Bow Slot",     _equipmentType, 1);
         _heartSlot   = MakeContainer("Heart Track",  _heartType,    20);
@@ -162,6 +173,7 @@ public class ZeldaInventorySample : MonoBehaviour
 
         _rupees = ScriptableObject.CreateInstance<Currency>();
         _rupees.displayName = "Rupees";
+        // maxAmount is set at runtime when the wallet tier is established
 
         _bomb          = MakeItem("Bomb",           _bombBagType,   (_rupees,  10));
         _arrow         = MakeItem("Arrow",          _quiverType,    (_rupees,   5));

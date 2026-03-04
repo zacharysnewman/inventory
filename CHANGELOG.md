@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/zacharysnewman/inventory/compare/v1.1.0...v1.2.0) (2026-03-04)
+
+
+### Features
+
+* add partial fill, failure reasons, locking, sort/filter, bulk transfer, container migration, unique item limits, incremental counts, persistence, and Shop/Stash/Bonfire samples ([eb9ee11](https://github.com/zacharysnewman/inventory/commit/eb9ee11209aff3d57e1f88432a3d23f2f0af6b9c))
+
 # [1.1.0](https://github.com/zacharysnewman/inventory/compare/v1.0.0...v1.1.0) (2026-03-04)
 
 

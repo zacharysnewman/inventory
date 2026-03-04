@@ -1,6 +1,6 @@
 {
-    "name": "zacharysnewman.leveling",
-    "rootNamespace": "",
+    "name": "zacharysnewman.inventory",
+    "rootNamespace": "zacharysnewman.Inventory",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

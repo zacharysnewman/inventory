@@ -1,14 +1,15 @@
 {
-  "name": "com.zacharysnewman.leveling",
+  "name": "com.zacharysnewman.inventory",
   "version": "1.0.0",
-  "displayName": "Leveling",
-  "description": "Provides solid XP and Leveling management for a Unity project.",
+  "displayName": "Inventory",
+  "description": "A flexible and configurable inventory system for Unity supporting typed containers (Bomb Bag, Quiver, Wallet, etc.), stackable items, multiple currency types, and currency-gated purchases.",
   "keywords": [
-    "xp",
-    "level",
-    "leveling",
-    "levelup",
-    "rpg"
+    "inventory",
+    "items",
+    "containers",
+    "currency",
+    "rpg",
+    "game"
   ],
   "author": {
     "name": "zacharysnewman",
@@ -17,9 +18,19 @@
   "type": "library",
   "samples": [
     {
-      "displayName": "Example UI Usage",
-      "description": "Includes a demo scene to showcase how to use it with an example UI.",
-      "path": "Samples~/ExampleUIUsage"
+      "displayName": "Zelda-Style Inventory",
+      "description": "Bomb Bags, Quivers, and Wallets in three sizes each; sword and bow equipment slots; collectible heart containers; potion bottles; rupee-gated shop purchases; and bomb-bag upgrade with item transfer.",
+      "path": "Samples~/ZeldaInventory"
+    },
+    {
+      "displayName": "Warzone-Style Inventory",
+      "description": "Primary, secondary, and tertiary weapon slots (tertiary gated behind a Large Backpack pickup); lethal and tactical equipment slots; armor plate storage; and cash-based buy-station purchases.",
+      "path": "Samples~/WarzoneInventory"
+    },
+    {
+      "displayName": "Inventory Renderer",
+      "description": "InventoryRenderer MonoBehaviour with Inspector-wired TMP_Text bindings for item counts, currency amounts, and container slot contents/visibility. Driven entirely by Inventory events — no polling.",
+      "path": "Samples~/InventoryRenderer"
     }
   ]
 }

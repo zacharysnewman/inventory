@@ -23,5 +23,8 @@ namespace zacharysnewman.Inventory
 
         [Tooltip("Currencies consumed when this item is purchased via Inventory.TryPurchase.")]
         public List<CurrencyAmount> cost = new List<CurrencyAmount>();
+
+        [Tooltip("Maximum total quantity that can be held across all containers in one inventory. 0 = unlimited.")]
+        public int maxGlobalCount = 0;
     }
 }

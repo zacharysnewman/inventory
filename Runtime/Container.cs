@@ -37,42 +37,46 @@ namespace zacharysnewman.Inventory
 
         public int RemainingCapacity => definition.capacity - UsedCapacity;
 
-        public bool CanAdd(Item item, int quantity = 1)
+        // ── Type Check ───────────────────────────────────────────────────────
+
+        private bool IsTypeCompatible(Item item)
         {
-            bool typeOk;
-            if (definition.acceptsAllTypes)
-                typeOk = true;
-            else if (item.compatibleContainerTypes.Count == 0)
-                typeOk = false;
-            else
-            {
-                typeOk = false;
-                foreach (var type in item.compatibleContainerTypes)
-                {
-                    if (definition.acceptedTypes.Contains(type))
-                    {
-                        typeOk = true;
-                        break;
-                    }
-                }
-            }
-            if (!typeOk) return false;
-
-            if (definition.capacityMode == ContainerCapacityMode.TotalItems)
-                return RemainingCapacity >= quantity;
-
-            // Slots mode: predict how many new stack slots would be opened
-            int remaining = quantity;
-            foreach (var stack in _stacks)
-            {
-                if (stack.item != item) continue;
-                remaining -= item.maxStackSize - stack.quantity;
-                if (remaining <= 0) return true;
-            }
-            int newSlotsNeeded = Mathf.CeilToInt((float)remaining / item.maxStackSize);
-            return _stacks.Count + newSlotsNeeded <= definition.capacity;
+            if (definition.acceptsAllTypes) return true;
+            if (item.compatibleContainerTypes.Count == 0) return false;
+            foreach (var type in item.compatibleContainerTypes)
+                if (definition.acceptedTypes.Contains(type))
+                    return true;
+            return false;
         }
 
+        // ── Capacity Queries ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Returns the maximum quantity of <paramref name="item"/> that can currently be added to this container.
+        /// Returns 0 if the item type is incompatible.
+        /// </summary>
+        public int HowManyCanAdd(Item item)
+        {
+            if (!IsTypeCompatible(item)) return 0;
+
+            if (definition.capacityMode == ContainerCapacityMode.TotalItems)
+                return RemainingCapacity;
+
+            // Slots mode: space in existing stacks + space in free slots
+            int spaceInExisting = 0;
+            foreach (var stack in _stacks)
+                if (stack.item == item)
+                    spaceInExisting += item.maxStackSize - stack.quantity;
+            int freeSlots = definition.capacity - _stacks.Count;
+            return spaceInExisting + freeSlots * item.maxStackSize;
+        }
+
+        /// <summary>Returns true if <paramref name="quantity"/> of <paramref name="item"/> can fit in this container.</summary>
+        public bool CanAdd(Item item, int quantity = 1) => HowManyCanAdd(item) >= quantity;
+
+        // ── Item Operations ──────────────────────────────────────────────────
+
+        /// <summary>Adds <paramref name="quantity"/> of <paramref name="item"/>. Returns false if it cannot fit.</summary>
         public bool TryAdd(Item item, int quantity = 1)
         {
             if (!CanAdd(item, quantity))
@@ -104,6 +108,31 @@ namespace zacharysnewman.Inventory
             return true;
         }
 
+        /// <summary>
+        /// Adds <paramref name="quantity"/> of <paramref name="item"/>, reporting why it failed via <paramref name="result"/>.
+        /// </summary>
+        public bool TryAdd(Item item, int quantity, out AddResult result)
+        {
+            if (!IsTypeCompatible(item)) { result = AddResult.WrongType; return false; }
+            if (HowManyCanAdd(item) < quantity) { result = AddResult.NoSpace; return false; }
+            TryAdd(item, quantity);
+            result = AddResult.Success;
+            return true;
+        }
+
+        /// <summary>
+        /// Adds as many of <paramref name="item"/> as possible up to <paramref name="quantity"/>.
+        /// Returns the number actually added (0 if incompatible type).
+        /// </summary>
+        public int AddAsManyAsPossible(Item item, int quantity = 1)
+        {
+            int canAdd = Mathf.Min(HowManyCanAdd(item), quantity);
+            if (canAdd <= 0) return 0;
+            TryAdd(item, canAdd);
+            return canAdd;
+        }
+
+        /// <summary>Removes <paramref name="quantity"/> of <paramref name="item"/>. Returns false if not enough present.</summary>
         public bool TryRemove(Item item, int quantity = 1)
         {
             if (GetQuantity(item) < quantity)
@@ -125,6 +154,17 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>
+        /// Removes <paramref name="quantity"/> of <paramref name="item"/>, reporting why it failed via <paramref name="result"/>.
+        /// </summary>
+        public bool TryRemove(Item item, int quantity, out RemoveResult result)
+        {
+            if (GetQuantity(item) < quantity) { result = RemoveResult.NotEnough; return false; }
+            TryRemove(item, quantity);
+            result = RemoveResult.Success;
+            return true;
+        }
+
+        /// <summary>
         /// Moves <paramref name="quantity"/> of <paramref name="item"/> from this container into <paramref name="target"/>.
         /// Atomic — nothing changes if either side cannot complete the operation.
         /// </summary>
@@ -137,6 +177,7 @@ namespace zacharysnewman.Inventory
             return true;
         }
 
+        /// <summary>Returns the total quantity of <paramref name="item"/> held in this container.</summary>
         public int GetQuantity(Item item)
         {
             int total = 0;
@@ -144,6 +185,13 @@ namespace zacharysnewman.Inventory
                 if (stack.item == item)
                     total += stack.quantity;
             return total;
+        }
+
+        /// <summary>Sorts all stacks in place using the provided <paramref name="comparison"/> and fires <see cref="OnChanged"/>.</summary>
+        public void Sort(Comparison<ItemStack> comparison)
+        {
+            _stacks.Sort(comparison);
+            OnChanged?.Invoke();
         }
     }
 }

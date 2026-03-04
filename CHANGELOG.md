@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/zacharysnewman/inventory/compare/v1.2.0...v1.3.0) (2026-03-04)
+
+
+### Features
+
+* Add meta files ([aeddfb4](https://github.com/zacharysnewman/inventory/commit/aeddfb4ce21f1d58fa7d51fa04227e733d6f872c))
+
 # [1.2.0](https://github.com/zacharysnewman/inventory/compare/v1.1.0...v1.2.0) (2026-03-04)
 
 

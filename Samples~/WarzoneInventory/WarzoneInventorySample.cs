@@ -110,7 +110,7 @@ public class WarzoneInventorySample : MonoBehaviour
         _inventory.AddContainer(_armorPlatesSlot);
         _inventory.AddContainer(_backpackSlot);   // ← general slot, listed last
 
-        _inventory.AddCurrency(_cash, 4500);
+        _inventory.TryAddCurrency(_cash, 4500);
 
         // ── Loot first set of weapons — fill dedicated slots ──────────────────
         _inventory.TryAddItem(_assaultRifle);  // → primary slot

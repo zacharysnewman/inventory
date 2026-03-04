@@ -31,6 +31,21 @@
       "displayName": "Inventory Renderer",
       "description": "InventoryRenderer MonoBehaviour with Inspector-wired TMP_Text bindings for item counts, currency amounts, and container slot contents/visibility. Driven entirely by Inventory events — no polling.",
       "path": "Samples~/InventoryRenderer"
+    },
+    {
+      "displayName": "Shop",
+      "description": "Merchant that sells consumables, weapons, and a one-of-a-kind amulet (maxGlobalCount). Demonstrates TryPurchase with PurchaseResult, a sell-back helper, and a buy-max pattern using HowManyCanAdd.",
+      "path": "Samples~/Shop"
+    },
+    {
+      "displayName": "Stash",
+      "description": "Player backpack paired with a home stash. Demonstrates TryTransferAll (per-item and bulk), TryTransferFrom, Container.Sort, and GetItems with a filter predicate.",
+      "path": "Samples~/Stash"
+    },
+    {
+      "displayName": "Bonfire",
+      "description": "Checkpoint save/load modelled on a Dark Souls bonfire. Demonstrates Inventory.Save(), Inventory.Load(), and InventorySnapshot as the data contract for persistence.",
+      "path": "Samples~/Bonfire"
     }
   ]
 }

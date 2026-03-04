@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/zacharysnewman/inventory/compare/v1.0.0...v1.1.0) (2026-03-04)
+
+
+### Bug Fixes
+
+* replace wallet ContainerDefinitions with Currency.maxAmount tier system in Zelda sample ([52f945d](https://github.com/zacharysnewman/inventory/commit/52f945d91727e1a58771d3d17238b8b0407283f5))
+
+
+### Features
+
+* rename AddCurrency to TryAddCurrency with optional maxAmount cap on Currency ([5b6d7f2](https://github.com/zacharysnewman/inventory/commit/5b6d7f2e527459eb3fb013f3222a482d1f4732eb))
+
 # 1.0.0 (2026-03-04)
 
 

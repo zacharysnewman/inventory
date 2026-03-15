@@ -12,8 +12,9 @@ namespace zacharysnewman.Inventory
         public string displayName;
 
         [Tooltip("Restricts which containers can hold this item. " +
-                 "None = general item; only goes in acceptsAllTypes containers.")]
-        public ItemType itemType = ItemType.None;
+                 "Empty = general item; only goes in acceptsAllTypes containers.")]
+        [ItemTypeSelector]
+        public string itemType;
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]
         public int maxStackSize = 1;

@@ -69,7 +69,7 @@ public class WarzoneInventorySample : MonoBehaviour
     // ── Armor ─────────────────────────────────────────────────────────────────
     private Item _armorPlate;
 
-    // ── General Items (ItemType.None — backpack only) ─────────────────────────
+    // ── General Items (no itemType — backpack only) ───────────────────────────
     private Item _medKit;
     private Item _contractTablet;
 
@@ -143,12 +143,12 @@ public class WarzoneInventorySample : MonoBehaviour
 
     private void CreateDefinitions()
     {
-        _primarySlot     = MakeContainer("Primary Weapon",   ItemType.Primary,    1);
-        _secondarySlot   = MakeContainer("Secondary Weapon", ItemType.Secondary,  1);
-        _tertiarySlot    = MakeContainer("Tertiary Weapon",  ItemType.Tertiary,   1);
-        _lethalSlot      = MakeContainer("Lethal",           ItemType.Lethal,     1);
-        _tacticalSlot    = MakeContainer("Tactical",         ItemType.Tactical,   1);
-        _armorPlatesSlot = MakeContainer("Armor Plates",     ItemType.ArmorPlate, 5);
+        _primarySlot     = MakeContainer("Primary Weapon",   "Primary",    1);
+        _secondarySlot   = MakeContainer("Secondary Weapon", "Secondary",  1);
+        _tertiarySlot    = MakeContainer("Tertiary Weapon",  "Tertiary",   1);
+        _lethalSlot      = MakeContainer("Lethal",           "Lethal",     1);
+        _tacticalSlot    = MakeContainer("Tactical",         "Tactical",   1);
+        _armorPlatesSlot = MakeContainer("Armor Plates",     "ArmorPlate", 5);
 
         _backpackSlot = ScriptableObject.CreateInstance<ContainerDefinition>();
         _backpackSlot.displayName     = "Backpack";
@@ -156,22 +156,22 @@ public class WarzoneInventorySample : MonoBehaviour
         _backpackSlot.capacity        = 6;
         _backpackSlot.capacityMode    = ContainerCapacityMode.Slots;
 
-        _assaultRifle = MakeItem("Assault Rifle", ItemType.Primary);
-        _lmg          = MakeItem("LMG",           ItemType.Primary);
-        _sniperRifle  = MakeItem("Sniper Rifle",  ItemType.Primary);
-        _smg          = MakeItem("SMG",           ItemType.Secondary);
-        _pistol       = MakeItem("Pistol",        ItemType.Secondary);
-        _shotgun      = MakeItem("Shotgun",       ItemType.Secondary);
-        _rpg          = MakeItem("RPG",           ItemType.Tertiary);
-        _mortar       = MakeItem("Mortar",        ItemType.Tertiary);
-        _fragGrenade  = MakeItem("Frag Grenade",  ItemType.Lethal);
-        _semtex       = MakeItem("Semtex",        ItemType.Lethal);
-        _smokeGrenade = MakeItem("Smoke Grenade", ItemType.Tactical);
-        _stunGrenade  = MakeItem("Stun Grenade",  ItemType.Tactical);
-        _armorPlate   = MakeItem("Armor Plate",   ItemType.ArmorPlate);
+        _assaultRifle = MakeItem("Assault Rifle", "Primary");
+        _lmg          = MakeItem("LMG",           "Primary");
+        _sniperRifle  = MakeItem("Sniper Rifle",  "Primary");
+        _smg          = MakeItem("SMG",           "Secondary");
+        _pistol       = MakeItem("Pistol",        "Secondary");
+        _shotgun      = MakeItem("Shotgun",       "Secondary");
+        _rpg          = MakeItem("RPG",           "Tertiary");
+        _mortar       = MakeItem("Mortar",        "Tertiary");
+        _fragGrenade  = MakeItem("Frag Grenade",  "Lethal");
+        _semtex       = MakeItem("Semtex",        "Lethal");
+        _smokeGrenade = MakeItem("Smoke Grenade", "Tactical");
+        _stunGrenade  = MakeItem("Stun Grenade",  "Tactical");
+        _armorPlate   = MakeItem("Armor Plate",   "ArmorPlate");
 
-        _medKit         = MakeItem("Med Kit",         ItemType.None);
-        _contractTablet = MakeItem("Contract Tablet", ItemType.None);
+        _medKit         = MakeItem("Med Kit",         null);
+        _contractTablet = MakeItem("Contract Tablet", null);
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@ public class WarzoneInventorySample : MonoBehaviour
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static ContainerDefinition MakeContainer(string displayName, ItemType type, int capacity)
+    private static ContainerDefinition MakeContainer(string displayName, string type, int capacity)
     {
         var d = ScriptableObject.CreateInstance<ContainerDefinition>();
         d.displayName = displayName;
@@ -211,11 +211,11 @@ public class WarzoneInventorySample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, ItemType type)
+    private static Item MakeItem(string displayName, string type)
     {
         var item = ScriptableObject.CreateInstance<Item>();
         item.displayName  = displayName;
-        item.itemType     = type;
+        item.itemType     = type ?? string.Empty;
         item.maxStackSize = 1;
         return item;
     }

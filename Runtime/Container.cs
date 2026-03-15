@@ -42,7 +42,7 @@ namespace zacharysnewman.Inventory
         private bool IsTypeCompatible(Item item)
         {
             if (definition.acceptsAllTypes) return true;
-            if (item.itemType == ItemType.None) return false;
+            if (string.IsNullOrEmpty(item.itemType)) return false;
             return definition.acceptedTypes.Contains(item.itemType);
         }
 

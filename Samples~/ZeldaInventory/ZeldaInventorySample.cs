@@ -135,28 +135,28 @@ public class ZeldaInventorySample : MonoBehaviour
 
     private void CreateDefinitions()
     {
-        _smallBombBag   = MakeContainer("Small Bomb Bag",   ItemType.BombBag,   10);
-        _largeBombBag   = MakeContainer("Large Bomb Bag",   ItemType.BombBag,   20);
-        _biggestBombBag = MakeContainer("Biggest Bomb Bag", ItemType.BombBag,   30);
-        _smallQuiver    = MakeContainer("Small Quiver",     ItemType.Quiver,    30);
-        _largeQuiver    = MakeContainer("Large Quiver",     ItemType.Quiver,    40);
-        _biggestQuiver  = MakeContainer("Biggest Quiver",   ItemType.Quiver,    50);
-        _swordSlot      = MakeContainer("Sword Slot",       ItemType.Equipment,  1);
-        _bowSlot        = MakeContainer("Bow Slot",         ItemType.Equipment,  1);
-        _heartSlot      = MakeContainer("Heart Track",      ItemType.Heart,     20);
-        _bottleSlots    = MakeContainer("Bottle Slots",     ItemType.Bottle,     4);
-        _smallWallet    = MakeContainer("Small Wallet",     ItemType.Wallet,    99);
-        _largeWallet    = MakeContainer("Large Wallet",     ItemType.Wallet,   200);
-        _giantWallet    = MakeContainer("Giant Wallet",     ItemType.Wallet,   500);
+        _smallBombBag   = MakeContainer("Small Bomb Bag",   "BombBag",   10);
+        _largeBombBag   = MakeContainer("Large Bomb Bag",   "BombBag",   20);
+        _biggestBombBag = MakeContainer("Biggest Bomb Bag", "BombBag",   30);
+        _smallQuiver    = MakeContainer("Small Quiver",     "Quiver",    30);
+        _largeQuiver    = MakeContainer("Large Quiver",     "Quiver",    40);
+        _biggestQuiver  = MakeContainer("Biggest Quiver",   "Quiver",    50);
+        _swordSlot      = MakeContainer("Sword Slot",       "Equipment",  1);
+        _bowSlot        = MakeContainer("Bow Slot",         "Equipment",  1);
+        _heartSlot      = MakeContainer("Heart Track",      "Heart",     20);
+        _bottleSlots    = MakeContainer("Bottle Slots",     "Bottle",     4);
+        _smallWallet    = MakeContainer("Small Wallet",     "Wallet",    99);
+        _largeWallet    = MakeContainer("Large Wallet",     "Wallet",   200);
+        _giantWallet    = MakeContainer("Giant Wallet",     "Wallet",   500);
 
-        _rupee          = MakeItem("Rupee",           ItemType.Wallet,    maxStackSize: 99);
-        _bomb           = MakeItem("Bomb",            ItemType.BombBag);
-        _arrow          = MakeItem("Arrow",           ItemType.Quiver);
-        _masterSword    = MakeItem("Master Sword",    ItemType.Equipment);
-        _heroBow        = MakeItem("Hero's Bow",      ItemType.Equipment);
-        _heartContainer = MakeItem("Heart Container", ItemType.Heart);
-        _bluePotion     = MakeItem("Blue Potion",     ItemType.Bottle);
-        _redPotion      = MakeItem("Red Potion",      ItemType.Bottle);
+        _rupee          = MakeItem("Rupee",           "Wallet",    maxStackSize: 99);
+        _bomb           = MakeItem("Bomb",            "BombBag");
+        _arrow          = MakeItem("Arrow",           "Quiver");
+        _masterSword    = MakeItem("Master Sword",    "Equipment");
+        _heroBow        = MakeItem("Hero's Bow",      "Equipment");
+        _heartContainer = MakeItem("Heart Container", "Heart");
+        _bluePotion     = MakeItem("Blue Potion",     "Bottle");
+        _redPotion      = MakeItem("Red Potion",      "Bottle");
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ public class ZeldaInventorySample : MonoBehaviour
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static ContainerDefinition MakeContainer(string displayName, ItemType type, int capacity)
+    private static ContainerDefinition MakeContainer(string displayName, string type, int capacity)
     {
         var d = ScriptableObject.CreateInstance<ContainerDefinition>();
         d.displayName = displayName;
@@ -186,11 +186,11 @@ public class ZeldaInventorySample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, ItemType type, int maxStackSize = 1)
+    private static Item MakeItem(string displayName, string type, int maxStackSize = 1)
     {
         var item = ScriptableObject.CreateInstance<Item>();
         item.displayName  = displayName;
-        item.itemType     = type;
+        item.itemType     = type ?? string.Empty;
         item.maxStackSize = maxStackSize;
         return item;
     }

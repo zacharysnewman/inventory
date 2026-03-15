@@ -6,12 +6,12 @@ namespace zacharysnewman.Inventory
 {
     /// <summary>
     /// MonoBehaviour that manages a collection of typed containers.
-    /// Assign ContainerDefinition assets in the Inspector to configure which containers
-    /// (e.g. Bomb Bag, Quiver, Backpack) this inventory exposes at runtime.
+    /// Assign an <see cref="InventoryDefinition"/> in the Inspector to configure the initial
+    /// container layout. Containers can also be added or removed at runtime.
     /// </summary>
     public class Inventory : MonoBehaviour
     {
-        [SerializeField] private List<ContainerDefinition> containerDefinitions = new List<ContainerDefinition>();
+        [SerializeField] private InventoryDefinition definition;
 
         private readonly List<Container> _containers = new List<Container>();
         private readonly Dictionary<Item, int> _itemCounts = new Dictionary<Item, int>();
@@ -35,8 +35,9 @@ namespace zacharysnewman.Inventory
 
         private void Awake()
         {
-            foreach (var def in containerDefinitions)
-                _containers.Add(new Container { definition = def });
+            if (definition == null) return;
+            foreach (var containerDef in definition.containers)
+                _containers.Add(new Container { definition = containerDef });
         }
 
         // ── Container Management ─────────────────────────────────────────────

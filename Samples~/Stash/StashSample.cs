@@ -25,10 +25,10 @@ public class StashSample : MonoBehaviour
     private Inventory _stash;
 
     // ── Items ────────────────────────────────────────────────────────────────
-    private Item _goldGem;      // stackSize 10 — trade material
-    private Item _ironBar;      // stackSize 5  — crafting material
-    private Item _healthPotion; // stackSize 5  — consumable
-    private Item _ancientKey;   // stackSize 1, maxGlobalCount 1 — quest item
+    private ItemDefinition _goldGem;      // stackSize 10 — trade material
+    private ItemDefinition _ironBar;      // stackSize 5  — crafting material
+    private ItemDefinition _healthPotion; // stackSize 5  — consumable
+    private ItemDefinition _ancientKey;   // stackSize 1  — quest item
 
     private void Start()
     {
@@ -102,7 +102,7 @@ public class StashSample : MonoBehaviour
             Debug.Log($"  {stack.item.displayName}: {stack.quantity}");
         Debug.Log("");
 
-        // ── Filter: show only bulk/stackable items (not unique quest items) ────
+        // ── Filter: show only bulk/stackable items ────────────────────────────
         Debug.Log("── Stackable items in stash (maxStackSize > 1) ──");
         foreach (var stack in _stash.GetItems(item => item.maxStackSize > 1))
             Debug.Log($"  {stack.item.displayName}: {stack.quantity}");
@@ -135,7 +135,7 @@ public class StashSample : MonoBehaviour
         _goldGem      = MakeItem("Gold Gem",      stackSize: 10);
         _ironBar      = MakeItem("Iron Bar",       stackSize:  5);
         _healthPotion = MakeItem("Health Potion",  stackSize:  5);
-        _ancientKey   = MakeItem("Ancient Key",    stackSize:  1, maxGlobal: 1);
+        _ancientKey   = MakeItem("Ancient Key",    stackSize:  1);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -149,12 +149,11 @@ public class StashSample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, int stackSize = 1, int maxGlobal = 0)
+    private static ItemDefinition MakeItem(string displayName, int stackSize = 1)
     {
-        var item = ScriptableObject.CreateInstance<Item>();
-        item.displayName    = displayName;
-        item.maxStackSize   = stackSize;
-        item.maxGlobalCount = maxGlobal;
+        var item = ScriptableObject.CreateInstance<ItemDefinition>();
+        item.displayName  = displayName;
+        item.maxStackSize = stackSize;
         return item;
     }
 }

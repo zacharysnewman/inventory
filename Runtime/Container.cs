@@ -39,14 +39,11 @@ namespace zacharysnewman.Inventory
 
         // ── Type Check ───────────────────────────────────────────────────────
 
-        private bool IsTypeCompatible(Item item)
+        private bool IsTypeCompatible(ItemDefinition item)
         {
             if (definition.acceptsAllTypes) return true;
-            if (item.compatibleContainerTypes.Count == 0) return false;
-            foreach (var type in item.compatibleContainerTypes)
-                if (definition.acceptedTypes.Contains(type))
-                    return true;
-            return false;
+            if (string.IsNullOrEmpty(item.itemType)) return false;
+            return definition.acceptedTypes.Contains(item.itemType);
         }
 
         // ── Capacity Queries ─────────────────────────────────────────────────
@@ -55,11 +52,11 @@ namespace zacharysnewman.Inventory
         /// Returns the maximum quantity of <paramref name="item"/> that can currently be added to this container.
         /// Returns 0 if the item type is incompatible.
         /// </summary>
-        public int HowManyCanAdd(Item item)
+        public int HowManyCanAdd(ItemDefinition item)
         {
             if (!IsTypeCompatible(item)) return 0;
 
-            if (definition.capacityMode == ContainerCapacityMode.TotalItems)
+            if (definition.capacityMode == ContainerCapacityMode.CountLimited)
                 return RemainingCapacity;
 
             // Slots mode: space in existing stacks + space in free slots
@@ -72,12 +69,12 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Returns true if <paramref name="quantity"/> of <paramref name="item"/> can fit in this container.</summary>
-        public bool CanAdd(Item item, int quantity = 1) => HowManyCanAdd(item) >= quantity;
+        public bool CanAdd(ItemDefinition item, int quantity = 1) => HowManyCanAdd(item) >= quantity;
 
         // ── Item Operations ──────────────────────────────────────────────────
 
         /// <summary>Adds <paramref name="quantity"/> of <paramref name="item"/>. Returns false if it cannot fit.</summary>
-        public bool TryAdd(Item item, int quantity = 1)
+        public bool TryAdd(ItemDefinition item, int quantity = 1)
         {
             if (!CanAdd(item, quantity))
                 return false;
@@ -111,7 +108,7 @@ namespace zacharysnewman.Inventory
         /// <summary>
         /// Adds <paramref name="quantity"/> of <paramref name="item"/>, reporting why it failed via <paramref name="result"/>.
         /// </summary>
-        public bool TryAdd(Item item, int quantity, out AddResult result)
+        public bool TryAdd(ItemDefinition item, int quantity, out AddResult result)
         {
             if (!IsTypeCompatible(item)) { result = AddResult.WrongType; return false; }
             if (HowManyCanAdd(item) < quantity) { result = AddResult.NoSpace; return false; }
@@ -124,7 +121,7 @@ namespace zacharysnewman.Inventory
         /// Adds as many of <paramref name="item"/> as possible up to <paramref name="quantity"/>.
         /// Returns the number actually added (0 if incompatible type).
         /// </summary>
-        public int AddAsManyAsPossible(Item item, int quantity = 1)
+        public int AddAsManyAsPossible(ItemDefinition item, int quantity = 1)
         {
             int canAdd = Mathf.Min(HowManyCanAdd(item), quantity);
             if (canAdd <= 0) return 0;
@@ -133,7 +130,7 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Removes <paramref name="quantity"/> of <paramref name="item"/>. Returns false if not enough present.</summary>
-        public bool TryRemove(Item item, int quantity = 1)
+        public bool TryRemove(ItemDefinition item, int quantity = 1)
         {
             if (GetQuantity(item) < quantity)
                 return false;
@@ -156,7 +153,7 @@ namespace zacharysnewman.Inventory
         /// <summary>
         /// Removes <paramref name="quantity"/> of <paramref name="item"/>, reporting why it failed via <paramref name="result"/>.
         /// </summary>
-        public bool TryRemove(Item item, int quantity, out RemoveResult result)
+        public bool TryRemove(ItemDefinition item, int quantity, out RemoveResult result)
         {
             if (GetQuantity(item) < quantity) { result = RemoveResult.NotEnough; return false; }
             TryRemove(item, quantity);
@@ -168,7 +165,7 @@ namespace zacharysnewman.Inventory
         /// Moves <paramref name="quantity"/> of <paramref name="item"/> from this container into <paramref name="target"/>.
         /// Atomic — nothing changes if either side cannot complete the operation.
         /// </summary>
-        public bool TryMoveTo(Container target, Item item, int quantity = 1)
+        public bool TryMoveTo(Container target, ItemDefinition item, int quantity = 1)
         {
             if (GetQuantity(item) < quantity) return false;
             if (!target.CanAdd(item, quantity)) return false;
@@ -178,7 +175,7 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Returns the total quantity of <paramref name="item"/> held in this container.</summary>
-        public int GetQuantity(Item item)
+        public int GetQuantity(ItemDefinition item)
         {
             int total = 0;
             foreach (var stack in _stacks)

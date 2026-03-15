@@ -4,15 +4,15 @@ namespace zacharysnewman.Inventory
 {
     /// <summary>
     /// A runtime grouping of identical items within a container slot.
-    /// Quantity is capped at Item.maxStackSize by the Container that owns it.
+    /// Quantity is capped at ItemDefinition.maxStackSize by the Container that owns it.
     /// </summary>
     [Serializable]
     public class ItemStack
     {
-        public Item item;
+        public ItemDefinition item;
         public int quantity;
 
-        public ItemStack(Item item, int quantity = 1)
+        public ItemStack(ItemDefinition item, int quantity = 1)
         {
             this.item = item;
             this.quantity = quantity;

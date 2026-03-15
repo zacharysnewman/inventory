@@ -20,7 +20,7 @@ using zacharysnewman.Inventory;
 /// GUID across sessions.
 ///
 /// Attach to the same GameObject as an Inventory component.
-/// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
+/// Leave the Inventory's InventoryDefinition unassigned in the Inspector;
 /// this script builds everything in code for demonstration purposes.
 /// </summary>
 [RequireComponent(typeof(Inventory))]
@@ -28,14 +28,11 @@ public class BonfireSample : MonoBehaviour
 {
     private Inventory _player;
 
-    // ── Currencies ───────────────────────────────────────────────────────────
-    private Currency _souls;
-
     // ── Items ────────────────────────────────────────────────────────────────
-    private Item _longSword;    // starting weapon — stackSize 1
-    private Item _estusFlask;   // consumable      — stackSize 4
-    private Item _ember;        // rare material   — stackSize 1
-    private Item _dragonScale;  // legendary drop  — stackSize 1, maxGlobalCount 1
+    private ItemDefinition _longSword;    // starting weapon — stackSize 1
+    private ItemDefinition _estusFlask;   // consumable      — stackSize 4
+    private ItemDefinition _ember;        // rare material   — stackSize 1
+    private ItemDefinition _dragonScale;  // legendary drop  — stackSize 1
 
     // The active bonfire checkpoint; null until the player rests
     private InventorySnapshot _checkpoint;
@@ -59,7 +56,6 @@ public class BonfireSample : MonoBehaviour
 
         _player.TryAddItem(_longSword);
         _player.TryAddItem(_estusFlask, 2);
-        _player.TryAddCurrency(_souls, 1000);
 
         LogState("Starting loadout");
 
@@ -69,26 +65,25 @@ public class BonfireSample : MonoBehaviour
 
         // ── First area cleared ────────────────────────────────────────────────
         _player.TryAddItem(_ember);
-        _player.TryAddCurrency(_souls, 500);
 
-        LogState("After clearing first area (Ember + 500 souls found)");
+        LogState("After clearing first area (Ember found)");
 
         // ── Second bonfire rest — overwrite checkpoint ────────────────────────
         _checkpoint = _player.Save();
         Debug.Log(">> Rested at bonfire — checkpoint overwritten.\n");
 
         // ── Second area: rare loot, then death ────────────────────────────────
-        _player.TryAddItem(_dragonScale);       // legendary drop
-        _player.TryAddCurrency(_souls, 2000);   // earned exploring
+        _player.TryAddItem(_dragonScale);  // legendary drop
+        _player.TryRemoveItem(_estusFlask); // used a flask
 
-        LogState("Before death (Dragon Scale + 2000 souls found since last bonfire)");
+        LogState("Before death (Dragon Scale found, one Estus used since last bonfire)");
 
         // ── Death — restore from last bonfire checkpoint ──────────────────────
         Debug.Log(">> You Died. Restoring from bonfire checkpoint...\n");
         _player.Load(_checkpoint);
 
         // Load() does not fire events, so query state directly after restoring
-        LogState("After respawn (Dragon Scale and post-bonfire souls are gone)");
+        LogState("After respawn (Dragon Scale gone, Estus restored)");
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────
@@ -96,7 +91,6 @@ public class BonfireSample : MonoBehaviour
     private void LogState(string label)
     {
         Debug.Log($"── {label} ──");
-        Debug.Log($"  Souls:       {_player.GetCurrency(_souls)}");
         Debug.Log($"  Long Sword:  {_player.GetItemCount(_longSword)}");
         Debug.Log($"  Estus Flask: {_player.GetItemCount(_estusFlask)}");
         Debug.Log($"  Ember:       {_player.GetItemCount(_ember)}");
@@ -108,13 +102,10 @@ public class BonfireSample : MonoBehaviour
 
     private void CreateDefinitions()
     {
-        _souls = ScriptableObject.CreateInstance<Currency>();
-        _souls.displayName = "Souls";
-
         _longSword   = MakeItem("Long Sword",   stackSize: 1);
         _estusFlask  = MakeItem("Estus Flask",  stackSize: 4);
         _ember       = MakeItem("Ember",         stackSize: 1);
-        _dragonScale = MakeItem("Dragon Scale",  stackSize: 1, maxGlobal: 1);
+        _dragonScale = MakeItem("Dragon Scale",  stackSize: 1);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -128,12 +119,11 @@ public class BonfireSample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, int stackSize = 1, int maxGlobal = 0)
+    private static ItemDefinition MakeItem(string displayName, int stackSize = 1)
     {
-        var item = ScriptableObject.CreateInstance<Item>();
-        item.displayName    = displayName;
-        item.maxStackSize   = stackSize;
-        item.maxGlobalCount = maxGlobal;
+        var item = ScriptableObject.CreateInstance<ItemDefinition>();
+        item.displayName  = displayName;
+        item.maxStackSize = stackSize;
         return item;
     }
 }

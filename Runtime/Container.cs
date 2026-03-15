@@ -59,7 +59,7 @@ namespace zacharysnewman.Inventory
         {
             if (!IsTypeCompatible(item)) return 0;
 
-            if (definition.capacityMode == ContainerCapacityMode.TotalItems)
+            if (definition.capacityMode == ContainerCapacityMode.CountLimited)
                 return RemainingCapacity;
 
             // Slots mode: space in existing stacks + space in free slots

@@ -9,7 +9,7 @@ namespace zacharysnewman.Inventory
     public enum ContainerCapacityMode
     {
         /// <summary>Capacity = total item count across all stacks (default). Good for typed containers like bomb bags and quivers.</summary>
-        TotalItems,
+        CountLimited,
         /// <summary>Capacity = number of occupied stack slots. Good for general-purpose grid inventories where a stack of 30 arrows takes one slot, not 30.</summary>
         Slots,
     }
@@ -32,7 +32,7 @@ namespace zacharysnewman.Inventory
 
         public int capacity;
 
-        [Tooltip("TotalItems: capacity is the sum of all item quantities (good for ammo bags). Slots: capacity is the number of distinct stack slots (good for grid inventories).")]
-        public ContainerCapacityMode capacityMode = ContainerCapacityMode.TotalItems;
+        [Tooltip("CountLimited: capacity is the sum of all item quantities (good for ammo bags). Slots: capacity is the number of distinct stack slots (good for grid inventories).")]
+        public ContainerCapacityMode capacityMode = ContainerCapacityMode.CountLimited;
     }
 }

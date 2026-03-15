@@ -6,7 +6,7 @@ namespace zacharysnewman.Inventory
     /// <summary>
     /// Defines an item that can be stored in an inventory container.
     /// Create instances via Assets > Create > Inventory > Item.
-    /// Each item declares which ContainerType it belongs in and what it costs to acquire.
+    /// Each item declares which ContainerType it belongs in.
     /// </summary>
     [CreateAssetMenu(fileName = "NewItem", menuName = "Inventory/Item")]
     public class Item : ScriptableObject
@@ -20,11 +20,5 @@ namespace zacharysnewman.Inventory
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]
         public int maxStackSize = 1;
-
-        [Tooltip("Currencies consumed when this item is purchased via Inventory.TryPurchase.")]
-        public List<CurrencyAmount> cost = new List<CurrencyAmount>();
-
-        [Tooltip("Maximum total quantity that can be held across all containers in one inventory. 0 = unlimited.")]
-        public int maxGlobalCount = 0;
     }
 }

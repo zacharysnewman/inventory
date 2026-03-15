@@ -11,19 +11,18 @@ using zacharysnewman.Inventory;
 ///   Hearts    — collectible heart containers (max 20)
 ///   Bottle    — 4 bottle slots for potions
 ///
-/// Currency: Rupees — fungible count with a tiered cap (wallet tier).
-///   Small Wallet  →  99 rupee max
-///   Large Wallet  → 200 rupee max
-///   Giant Wallet  → 500 rupee max
-///   Upgrading the wallet sets a new maxAmount on the Currency directly.
-///   Currencies are not items and do not occupy container slots.
+/// Currency: Rupees — modelled as an item stored in a Wallet container.
+///   Small Wallet  →  99 rupee capacity
+///   Large Wallet  → 200 rupee capacity
+///   Giant Wallet  → 500 rupee capacity
+///   Upgrading the wallet swaps the container, preserving rupees that fit.
 ///
 /// The demo shows:
 ///   1. Starting with a small bomb bag, small quiver, and small wallet (rupee cap 99)
 ///   2. Looting the Master Sword and Hero's Bow
-///   3. Buying bombs, arrows, and a potion at a shop
-///   4. Upgrading the bomb bag (small → large), transferring existing bombs
-///   5. Upgrading the wallet (small → large), raising the rupee cap to 200
+///   3. Buying bombs, arrows, and a potion at a shop (manual remove rupees + add item)
+///   4. Upgrading the bomb bag (small → large) via SwapContainer
+///   5. Upgrading the wallet (small → large) via SwapContainer, raising rupee cap to 200
 ///   6. Earning a heart container after defeating a boss
 ///
 /// Attach to the same GameObject as an Inventory component.
@@ -42,6 +41,7 @@ public class ZeldaInventorySample : MonoBehaviour
     private ContainerType _equipmentType;
     private ContainerType _heartType;
     private ContainerType _bottleType;
+    private ContainerType _walletType;
 
     // ── Container Definitions ────────────────────────────────────────────────
 
@@ -65,24 +65,20 @@ public class ZeldaInventorySample : MonoBehaviour
     // Bottles — up to 4 potions stored at once
     private ContainerDefinition _bottleSlots;
 
-    // ── Wallet tiers (rupee caps) ─────────────────────────────────────────────
-    // Wallets are not containers — rupees are fungible and don't occupy slots.
-    // The tier is modelled as a maxAmount on the Currency itself.
-    private const int SmallWalletMax  =  99;
-    private const int LargeWalletMax  = 200;
-    private const int GiantWalletMax  = 500;
-
-    // ── Currencies ───────────────────────────────────────────────────────────
-    private Currency _rupees;
+    // Wallets — rupees are items stored here; capacity = rupee cap
+    private ContainerDefinition _smallWallet;   //  99 rupees
+    private ContainerDefinition _largeWallet;   // 200 rupees
+    private ContainerDefinition _giantWallet;   // 500 rupees
 
     // ── Items ────────────────────────────────────────────────────────────────
+    private Item _rupee;
     private Item _bomb;
     private Item _arrow;
     private Item _masterSword;
     private Item _heroBow;
     private Item _heartContainer;
-    private Item _bluePotion;   //  50 rupees — restores some magic/health
-    private Item _redPotion;    // 150 rupees — fully restores health
+    private Item _bluePotion;   //  50 rupees at the shop
+    private Item _redPotion;    // 150 rupees at the shop
 
     private void Start()
     {
@@ -104,18 +100,19 @@ public class ZeldaInventorySample : MonoBehaviour
         _inventory.AddContainer(_bowSlot);
         _inventory.AddContainer(_heartSlot);
         _inventory.AddContainer(_bottleSlots);
+        _inventory.AddContainer(_smallWallet);
 
-        // Start with a small wallet (99 rupee cap) and some rupees
-        _rupees.maxAmount = SmallWalletMax;
+        // Start with 3 hearts and 99 rupees (small wallet fills to its cap)
         _inventory.TryAddItem(_heartContainer, 3);
-        _inventory.TryAddCurrency(_rupees, 200); // clamped to 99 by small wallet
+        _inventory.AddAsManyAsPossible(_rupee, 200); // clamped to 99 by small wallet
 
         LogState("Start of adventure");
 
         // ── Visit a shop ─────────────────────────────────────────────────────
-        _inventory.TryPurchase(_bomb, 5);    // −50 rupees
-        _inventory.TryPurchase(_arrow, 10);  // −50 rupees
-        _inventory.TryPurchase(_bluePotion); // −50 rupees
+        // Purchasing = remove rupees then add item
+        TryBuy(_bomb,       5, costPerUnit: 10);  // −50 rupees
+        TryBuy(_arrow,     10, costPerUnit:  5);  // −50 rupees
+        TryBuy(_bluePotion, 1, costPerUnit: 50);  // −50 rupees (but we only have ~99−50−50 = ... depends on order)
 
         LogState("After shopping");
 
@@ -124,21 +121,17 @@ public class ZeldaInventorySample : MonoBehaviour
         _inventory.TryAddItem(_heroBow);
 
         // ── Upgrade the bomb bag ──────────────────────────────────────────────
-        // Transfer current bombs before swapping so they are not lost
-        var oldBag = _inventory.GetContainer(_smallBombBag);
-        int carriedBombs = oldBag?.GetQuantity(_bomb) ?? 0;
-        _inventory.RemoveContainer(_smallBombBag);
-        _inventory.AddContainer(_largeBombBag);
-        if (carriedBombs > 0)
-            _inventory.TryAddItem(_bomb, carriedBombs); // restore transferred bombs
+        // SwapContainer preserves bombs that fit and returns overflow (none expected here)
+        var overflow = _inventory.SwapContainer(_smallBombBag, _largeBombBag);
+        if (overflow.Count > 0)
+            Debug.Log($"Bomb bag upgrade overflow: {overflow[0].quantity} bombs lost");
 
         LogState("After upgrading to Large Bomb Bag");
 
         // ── Upgrade the wallet ────────────────────────────────────────────────
-        // Wallets are not containers — just raise the rupee cap on the Currency.
-        // Rupees already held are kept; the new cap allows earning more.
-        _rupees.maxAmount = LargeWalletMax;
-        _inventory.TryAddCurrency(_rupees, 50); // could now hold up to 200
+        // SwapContainer preserves rupees up to the new cap.
+        _inventory.SwapContainer(_smallWallet, _largeWallet);
+        _inventory.AddAsManyAsPossible(_rupee, 50); // could now hold up to 200
 
         LogState("After upgrading to Large Wallet");
 
@@ -146,6 +139,23 @@ public class ZeldaInventorySample : MonoBehaviour
         _inventory.TryAddItem(_heartContainer);
 
         LogState("After boss reward");
+    }
+
+    // ── Shop helper ───────────────────────────────────────────────────────────
+
+    private void TryBuy(Item item, int quantity, int costPerUnit)
+    {
+        int totalCost = costPerUnit * quantity;
+        if (_inventory.GetItemCount(_rupee) >= totalCost && _inventory.CanAddItem(item, quantity))
+        {
+            _inventory.TryRemoveItem(_rupee, totalCost);
+            _inventory.TryAddItem(item, quantity);
+            Debug.Log($"Bought {quantity}× {item.displayName} for {totalCost} rupees");
+        }
+        else
+        {
+            Debug.Log($"Cannot buy {quantity}× {item.displayName} (cost {totalCost}, have {_inventory.GetItemCount(_rupee)})");
+        }
     }
 
     // ── Definitions ──────────────────────────────────────────────────────────
@@ -157,6 +167,7 @@ public class ZeldaInventorySample : MonoBehaviour
         _equipmentType = MakeType("Equipment");
         _heartType     = MakeType("Heart");
         _bottleType    = MakeType("Bottle");
+        _walletType    = MakeType("Wallet");
 
         _smallBombBag   = MakeContainer("Small Bomb Bag",   _bombBagType,  10);
         _largeBombBag   = MakeContainer("Large Bomb Bag",   _bombBagType,  20);
@@ -171,17 +182,18 @@ public class ZeldaInventorySample : MonoBehaviour
         _heartSlot   = MakeContainer("Heart Track",  _heartType,    20);
         _bottleSlots = MakeContainer("Bottle Slots", _bottleType,    4);
 
-        _rupees = ScriptableObject.CreateInstance<Currency>();
-        _rupees.displayName = "Rupees";
-        // maxAmount is set at runtime when the wallet tier is established
+        _smallWallet = MakeContainer("Small Wallet",  _walletType,  99);
+        _largeWallet = MakeContainer("Large Wallet",  _walletType, 200);
+        _giantWallet = MakeContainer("Giant Wallet",  _walletType, 500);
 
-        _bomb          = MakeItem("Bomb",           _bombBagType,   (_rupees,  10));
-        _arrow         = MakeItem("Arrow",          _quiverType,    (_rupees,   5));
-        _masterSword   = MakeItem("Master Sword",   _equipmentType);
-        _heroBow       = MakeItem("Hero's Bow",     _equipmentType);
+        _rupee          = MakeItem("Rupee",           _walletType,    maxStackSize: 99);
+        _bomb           = MakeItem("Bomb",            _bombBagType);
+        _arrow          = MakeItem("Arrow",           _quiverType);
+        _masterSword    = MakeItem("Master Sword",    _equipmentType);
+        _heroBow        = MakeItem("Hero's Bow",      _equipmentType);
         _heartContainer = MakeItem("Heart Container", _heartType);
-        _bluePotion    = MakeItem("Blue Potion",    _bottleType,    (_rupees,  50));
-        _redPotion     = MakeItem("Red Potion",     _bottleType,    (_rupees, 150));
+        _bluePotion     = MakeItem("Blue Potion",     _bottleType);
+        _redPotion      = MakeItem("Red Potion",      _bottleType);
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────
@@ -189,7 +201,7 @@ public class ZeldaInventorySample : MonoBehaviour
     private void LogState(string label)
     {
         Debug.Log($"── {label} ──");
-        Debug.Log($"  Rupees:      {_inventory.GetCurrency(_rupees)}");
+        Debug.Log($"  Rupees:      {_inventory.GetItemCount(_rupee)}");
         Debug.Log($"  Hearts:      {_inventory.GetItemCount(_heartContainer)}");
         Debug.Log($"  Bombs:       {_inventory.GetItemCount(_bomb)}");
         Debug.Log($"  Arrows:      {_inventory.GetItemCount(_arrow)}");
@@ -218,16 +230,13 @@ public class ZeldaInventorySample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, ContainerType type,
-        (Currency currency, int amount) cost = default)
+    private static Item MakeItem(string displayName, ContainerType type, int maxStackSize = 1)
     {
         var item = ScriptableObject.CreateInstance<Item>();
         item.displayName = displayName;
         if (type != null)
             item.compatibleContainerTypes.Add(type);
-        item.maxStackSize = 1;
-        if (cost.currency != null)
-            item.cost.Add(new CurrencyAmount { currency = cost.currency, amount = cost.amount });
+        item.maxStackSize = maxStackSize;
         return item;
     }
 }

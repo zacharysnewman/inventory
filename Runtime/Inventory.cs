@@ -5,18 +5,16 @@ using UnityEngine;
 namespace zacharysnewman.Inventory
 {
     /// <summary>
-    /// MonoBehaviour that manages a collection of typed containers and a currency wallet.
+    /// MonoBehaviour that manages a collection of typed containers.
     /// Assign ContainerDefinition assets in the Inspector to configure which containers
-    /// (e.g. Bomb Bag, Quiver, Wallet) this inventory exposes at runtime.
+    /// (e.g. Bomb Bag, Quiver, Backpack) this inventory exposes at runtime.
     /// </summary>
     public class Inventory : MonoBehaviour
     {
         [SerializeField] private List<ContainerDefinition> containerDefinitions = new List<ContainerDefinition>();
 
         private readonly List<Container> _containers = new List<Container>();
-        private readonly Dictionary<Currency, int> _currencies = new Dictionary<Currency, int>();
         private readonly Dictionary<Item, int> _itemCounts = new Dictionary<Item, int>();
-        private readonly HashSet<Item> _lockedItems = new HashSet<Item>();
 
         // ── Events ───────────────────────────────────────────────────────────
 
@@ -25,9 +23,6 @@ namespace zacharysnewman.Inventory
 
         /// <summary>Raised after an item is successfully removed. Reports the item and its new global count.</summary>
         public event Action<Item, int> OnItemRemoved;
-
-        /// <summary>Raised after any currency amount changes. Reports the currency and its new total.</summary>
-        public event Action<Currency, int> OnCurrencyChanged;
 
         /// <summary>Raised after a container is added at runtime.</summary>
         public event Action<Container> OnContainerAdded;
@@ -135,31 +130,21 @@ namespace zacharysnewman.Inventory
 
         // ── Item Management ──────────────────────────────────────────────────
 
-        /// <summary>
-        /// Returns true if at least one container can accept <paramref name="quantity"/> of <paramref name="item"/>.
-        /// Also enforces <see cref="Item.maxGlobalCount"/>.
-        /// </summary>
+        /// <summary>Returns true if at least one container can accept <paramref name="quantity"/> of <paramref name="item"/>.</summary>
         public bool CanAddItem(Item item, int quantity = 1)
         {
-            if (item.maxGlobalCount > 0 && GetItemCount(item) + quantity > item.maxGlobalCount)
-                return false;
             foreach (var container in _containers)
                 if (container.CanAdd(item, quantity))
                     return true;
             return false;
         }
 
-        /// <summary>
-        /// Returns the maximum quantity of <paramref name="item"/> that can currently be added across all containers.
-        /// Accounts for <see cref="Item.maxGlobalCount"/>.
-        /// </summary>
+        /// <summary>Returns the maximum quantity of <paramref name="item"/> that can currently be added across all containers.</summary>
         public int HowManyCanAdd(Item item)
         {
             int total = 0;
             foreach (var container in _containers)
                 total += container.HowManyCanAdd(item);
-            if (item.maxGlobalCount > 0)
-                return Mathf.Min(total, item.maxGlobalCount - GetItemCount(item));
             return total;
         }
 
@@ -184,11 +169,6 @@ namespace zacharysnewman.Inventory
         /// </summary>
         public bool TryAddItem(Item item, int quantity, out AddResult result)
         {
-            if (item.maxGlobalCount > 0 && GetItemCount(item) + quantity > item.maxGlobalCount)
-            {
-                result = AddResult.ExceedsGlobalLimit;
-                return false;
-            }
             AddResult bestFailure = AddResult.WrongType;
             foreach (var container in _containers)
             {
@@ -206,14 +186,10 @@ namespace zacharysnewman.Inventory
 
         /// <summary>
         /// Adds as many of <paramref name="item"/> as possible across all containers, up to <paramref name="quantity"/>.
-        /// Respects <see cref="Item.maxGlobalCount"/>. Returns the number actually added.
+        /// Returns the number actually added.
         /// </summary>
         public int AddAsManyAsPossible(Item item, int quantity = 1)
         {
-            if (item.maxGlobalCount > 0)
-                quantity = Mathf.Min(quantity, item.maxGlobalCount - GetItemCount(item));
-            if (quantity <= 0) return 0;
-
             int remaining = quantity;
             foreach (var container in _containers)
             {
@@ -232,7 +208,6 @@ namespace zacharysnewman.Inventory
         /// <summary>Removes <paramref name="quantity"/> of <paramref name="item"/> from the first container that has it.</summary>
         public bool TryRemoveItem(Item item, int quantity = 1)
         {
-            if (_lockedItems.Contains(item)) return false;
             foreach (var container in _containers)
             {
                 if (container.TryRemove(item, quantity))
@@ -250,7 +225,6 @@ namespace zacharysnewman.Inventory
         /// </summary>
         public bool TryRemoveItem(Item item, int quantity, out RemoveResult result)
         {
-            if (_lockedItems.Contains(item)) { result = RemoveResult.Locked; return false; }
             foreach (var container in _containers)
             {
                 if (container.TryRemove(item, quantity, out result))
@@ -266,12 +240,11 @@ namespace zacharysnewman.Inventory
 
         /// <summary>
         /// Adds <paramref name="quantity"/> of <paramref name="item"/> directly into <paramref name="container"/>,
-        /// which must belong to this inventory. Respects maxGlobalCount. Fires <see cref="OnItemAdded"/>.
+        /// which must belong to this inventory. Fires <see cref="OnItemAdded"/>.
         /// </summary>
         public bool TryAddToContainer(Container container, Item item, int quantity = 1)
         {
             if (!_containers.Contains(container)) return false;
-            if (item.maxGlobalCount > 0 && GetItemCount(item) + quantity > item.maxGlobalCount) return false;
             if (!container.TryAdd(item, quantity)) return false;
             UpdateItemCount(item, quantity);
             OnItemAdded?.Invoke(item, GetItemCount(item));
@@ -280,11 +253,10 @@ namespace zacharysnewman.Inventory
 
         /// <summary>
         /// Removes <paramref name="quantity"/> of <paramref name="item"/> directly from <paramref name="container"/>,
-        /// which must belong to this inventory. Respects item locks. Fires <see cref="OnItemRemoved"/>.
+        /// which must belong to this inventory. Fires <see cref="OnItemRemoved"/>.
         /// </summary>
         public bool TryRemoveFromContainer(Container container, Item item, int quantity = 1)
         {
-            if (_lockedItems.Contains(item)) return false;
             if (!_containers.Contains(container)) return false;
             if (!container.TryRemove(item, quantity)) return false;
             UpdateItemCount(item, -quantity);
@@ -321,17 +293,6 @@ namespace zacharysnewman.Inventory
             _itemCounts.TryGetValue(item, out int count);
             return count;
         }
-
-        // ── Item Locking ─────────────────────────────────────────────────────
-
-        /// <summary>Prevents <paramref name="item"/> from being removed until unlocked.</summary>
-        public void LockItem(Item item) => _lockedItems.Add(item);
-
-        /// <summary>Allows a previously locked <paramref name="item"/> to be removed again.</summary>
-        public void UnlockItem(Item item) => _lockedItems.Remove(item);
-
-        /// <summary>Returns true if <paramref name="item"/> is currently locked against removal.</summary>
-        public bool IsLocked(Item item) => _lockedItems.Contains(item);
 
         // ── Transfers ────────────────────────────────────────────────────────
 
@@ -384,99 +345,6 @@ namespace zacharysnewman.Inventory
             return totalMoved;
         }
 
-        // ── Currency Management ──────────────────────────────────────────────
-
-        /// <summary>Returns the current amount of <paramref name="currency"/> held.</summary>
-        public int GetCurrency(Currency currency)
-        {
-            _currencies.TryGetValue(currency, out int amount);
-            return amount;
-        }
-
-        /// <summary>
-        /// Adds <paramref name="amount"/> of <paramref name="currency"/>.
-        /// Returns false and makes no change if the currency has a max and is already at capacity.
-        /// If adding would exceed the max, the amount is clamped to the cap.
-        /// </summary>
-        public bool TryAddCurrency(Currency currency, int amount)
-        {
-            if (!_currencies.ContainsKey(currency))
-                _currencies[currency] = 0;
-
-            if (currency.maxAmount > 0 && _currencies[currency] >= currency.maxAmount)
-                return false;
-
-            if (currency.maxAmount > 0)
-                _currencies[currency] = Mathf.Min(_currencies[currency] + amount, currency.maxAmount);
-            else
-                _currencies[currency] += amount;
-
-            OnCurrencyChanged?.Invoke(currency, _currencies[currency]);
-            return true;
-        }
-
-        /// <summary>
-        /// Deducts <paramref name="amount"/> of <paramref name="currency"/>.
-        /// Returns false and makes no change if funds are insufficient.
-        /// </summary>
-        public bool TrySpendCurrency(Currency currency, int amount)
-        {
-            if (GetCurrency(currency) < amount) return false;
-            _currencies[currency] -= amount;
-            OnCurrencyChanged?.Invoke(currency, _currencies[currency]);
-            return true;
-        }
-
-        /// <summary>Returns true if the inventory holds enough of every currency in <paramref name="item"/>'s cost list.</summary>
-        public bool CanAfford(Item item, int quantity = 1)
-        {
-            foreach (var cost in item.cost)
-                if (GetCurrency(cost.currency) < cost.amount * quantity)
-                    return false;
-            return true;
-        }
-
-        // ── Purchase ─────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Attempts to purchase <paramref name="quantity"/> of <paramref name="item"/>:
-        /// checks affordability and container space, deducts currency, then adds the item.
-        /// All checks are atomic — nothing is deducted if the item cannot fit.
-        /// </summary>
-        public bool TryPurchase(Item item, int quantity = 1)
-        {
-            if (!CanAfford(item, quantity)) return false;
-
-            Container target = null;
-            foreach (var container in _containers)
-            {
-                if (container.CanAdd(item, quantity))
-                {
-                    target = container;
-                    break;
-                }
-            }
-            if (target == null) return false;
-
-            foreach (var cost in item.cost)
-                TrySpendCurrency(cost.currency, cost.amount * quantity);
-
-            target.TryAdd(item, quantity);
-            UpdateItemCount(item, quantity);
-            OnItemAdded?.Invoke(item, GetItemCount(item));
-            return true;
-        }
-
-        /// <summary>Attempts to purchase, reporting why it failed via <paramref name="result"/>.</summary>
-        public bool TryPurchase(Item item, int quantity, out PurchaseResult result)
-        {
-            if (!CanAfford(item, quantity)) { result = PurchaseResult.CannotAfford; return false; }
-            if (!CanAddItem(item, quantity)) { result = PurchaseResult.NoSpace; return false; }
-            TryPurchase(item, quantity);
-            result = PurchaseResult.Success;
-            return true;
-        }
-
         // ── Persistence ──────────────────────────────────────────────────────
 
         /// <summary>
@@ -493,8 +361,6 @@ namespace zacharysnewman.Inventory
                     cs.stacks.Add(new ItemStack(stack.item, stack.quantity));
                 snapshot.containers.Add(cs);
             }
-            foreach (var kvp in _currencies)
-                snapshot.currencies.Add(new CurrencyAmount { currency = kvp.Key, amount = kvp.Value });
             return snapshot;
         }
 
@@ -505,9 +371,7 @@ namespace zacharysnewman.Inventory
         public void Load(InventorySnapshot snapshot)
         {
             _containers.Clear();
-            _currencies.Clear();
             _itemCounts.Clear();
-            _lockedItems.Clear();
 
             foreach (var cs in snapshot.containers)
             {
@@ -519,9 +383,6 @@ namespace zacharysnewman.Inventory
                 }
                 _containers.Add(container);
             }
-
-            foreach (var ca in snapshot.currencies)
-                _currencies[ca.currency] = ca.amount;
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────

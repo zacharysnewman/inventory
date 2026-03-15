@@ -10,10 +10,8 @@ using zacharysnewman.Inventory;
 ///   Tertiary Weapon   — 1 slot  (RPGs, Mortars) — LOCKED until Large Backpack is picked up
 ///   Lethal            — 1 slot  (Frag, Semtex)
 ///   Tactical          — 1 slot  (Smoke, Stun)
-///   Armor Plates      — 5 slots (dedicated; looted or bought at buy station)
+///   Armor Plates      — 5 slots (dedicated; looted from the field)
 ///   General Backpack  — 6 slots (acceptsAllTypes; weapons overflow here, general items only go here)
-///
-/// Currency: Cash — looted from eliminated players, spent at the buy station.
 ///
 /// Container ordering matters: dedicated slots are added BEFORE the general backpack,
 /// so TryAddItem fills dedicated slots first and only overflows to the backpack when they are full.
@@ -28,7 +26,6 @@ using zacharysnewman.Inventory;
 ///   3. General items (med kit, contract tablet) accepted only by the backpack
 ///   4. Confirming a general item is rejected by a typed dedicated slot
 ///   5. Picking up a Large Backpack — unlocks the Tertiary slot
-///   6. Visiting a buy station to purchase armor plates with cash
 ///
 /// Attach to the same GameObject as an Inventory component.
 /// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
@@ -56,9 +53,6 @@ public class WarzoneInventorySample : MonoBehaviour
     private ContainerDefinition _tacticalSlot;
     private ContainerDefinition _armorPlatesSlot;  // dedicated; capacity = total items
     private ContainerDefinition _backpackSlot;     // general; acceptsAllTypes, capacity = slots
-
-    // ── Currencies ───────────────────────────────────────────────────────────
-    private Currency _cash;
 
     // ── Primary Weapons (typed) ───────────────────────────────────────────────
     private Item _assaultRifle;
@@ -110,8 +104,6 @@ public class WarzoneInventorySample : MonoBehaviour
         _inventory.AddContainer(_armorPlatesSlot);
         _inventory.AddContainer(_backpackSlot);   // ← general slot, listed last
 
-        _inventory.TryAddCurrency(_cash, 4500);
-
         // ── Loot first set of weapons — fill dedicated slots ──────────────────
         _inventory.TryAddItem(_assaultRifle);  // → primary slot
         _inventory.TryAddItem(_pistol);        // → secondary slot
@@ -156,10 +148,6 @@ public class WarzoneInventorySample : MonoBehaviour
         Debug.Log($"Picked up RPG → tertiary slot: {gotRpg}"); // true
         Debug.Log("");
 
-        // ── Buy station ───────────────────────────────────────────────────────
-        _inventory.TryPurchase(_armorPlate); // −$1,500
-        _inventory.TryPurchase(_armorPlate); // −$1,500
-
         LogState("Final state");
     }
 
@@ -184,13 +172,10 @@ public class WarzoneInventorySample : MonoBehaviour
 
         // General backpack — accepts any item type; capacity measured in slots
         _backpackSlot = ScriptableObject.CreateInstance<ContainerDefinition>();
-        _backpackSlot.displayName   = "Backpack";
+        _backpackSlot.displayName    = "Backpack";
         _backpackSlot.acceptsAllTypes = true;
-        _backpackSlot.capacity      = 6;
-        _backpackSlot.capacityMode  = ContainerCapacityMode.Slots;
-
-        _cash = ScriptableObject.CreateInstance<Currency>();
-        _cash.displayName = "Cash";
+        _backpackSlot.capacity       = 6;
+        _backpackSlot.capacityMode   = ContainerCapacityMode.Slots;
 
         // Typed weapons — go in their dedicated slot, overflow to backpack
         _assaultRifle = MakeItem("Assault Rifle", _primaryType);
@@ -205,11 +190,11 @@ public class WarzoneInventorySample : MonoBehaviour
         _semtex       = MakeItem("Semtex",        _lethalType);
         _smokeGrenade = MakeItem("Smoke Grenade", _tacticalType);
         _stunGrenade  = MakeItem("Stun Grenade",  _tacticalType);
-        _armorPlate   = MakeItem("Armor Plate",   _armorPlateType, (_cash, 1500));
+        _armorPlate   = MakeItem("Armor Plate",   _armorPlateType);
 
         // General items (null type) — backpack only, never enter a dedicated slot
-        _medKit         = MakeItem("Med Kit",          null);
-        _contractTablet = MakeItem("Contract Tablet",  null);
+        _medKit         = MakeItem("Med Kit",         null);
+        _contractTablet = MakeItem("Contract Tablet", null);
     }
 
     // ── Logging ───────────────────────────────────────────────────────────────
@@ -220,7 +205,6 @@ public class WarzoneInventorySample : MonoBehaviour
         int backpackUsed = backpack?.UsedCapacity ?? 0;
 
         Debug.Log($"── {label} ──");
-        Debug.Log($"  Cash:          ${_inventory.GetCurrency(_cash)}");
         Debug.Log($"  Primary slot:  {Equipped(_assaultRifle, _lmg, _sniperRifle)}");
         Debug.Log($"  Secondary slot:{Equipped(_smg, _pistol, _shotgun)}");
         Debug.Log($"  Tertiary slot: {Equipped(_rpg, _mortar)}");
@@ -257,16 +241,13 @@ public class WarzoneInventorySample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, ContainerType type,
-        (Currency currency, int amount) cost = default)
+    private static Item MakeItem(string displayName, ContainerType type)
     {
         var item = ScriptableObject.CreateInstance<Item>();
         item.displayName = displayName;
         if (type != null)
             item.compatibleContainerTypes.Add(type);
         item.maxStackSize = 1;
-        if (cost.currency != null)
-            item.cost.Add(new CurrencyAmount { currency = cost.currency, amount = cost.amount });
         return item;
     }
 }

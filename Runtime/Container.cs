@@ -42,11 +42,8 @@ namespace zacharysnewman.Inventory
         private bool IsTypeCompatible(Item item)
         {
             if (definition.acceptsAllTypes) return true;
-            if (item.compatibleContainerTypes.Count == 0) return false;
-            foreach (var type in item.compatibleContainerTypes)
-                if (definition.acceptedTypes.Contains(type))
-                    return true;
-            return false;
+            if (item.itemType == ItemType.None) return false;
+            return definition.acceptedTypes.Contains(item.itemType);
         }
 
         // ── Capacity Queries ─────────────────────────────────────────────────

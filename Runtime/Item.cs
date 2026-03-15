@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace zacharysnewman.Inventory
@@ -6,17 +5,15 @@ namespace zacharysnewman.Inventory
     /// <summary>
     /// Defines an item that can be stored in an inventory container.
     /// Create instances via Assets > Create > Inventory > Item.
-    /// Each item declares which ContainerType it belongs in.
     /// </summary>
     [CreateAssetMenu(fileName = "NewItem", menuName = "Inventory/Item")]
     public class Item : ScriptableObject
     {
         public string displayName;
 
-        [Tooltip("Restricts which containers can hold this item.\n\n" +
-                 "• One or more types — goes in containers that accept at least one matching type, OR any acceptsAllTypes container (overflow).\n" +
-                 "• Empty — general item; only goes in acceptsAllTypes containers, never in dedicated typed slots.")]
-        public List<ContainerType> compatibleContainerTypes = new List<ContainerType>();
+        [Tooltip("Restricts which containers can hold this item. " +
+                 "None = general item; only goes in acceptsAllTypes containers.")]
+        public ItemType itemType = ItemType.None;
 
         [Tooltip("Maximum number of this item that can occupy a single stack slot.")]
         public int maxStackSize = 1;

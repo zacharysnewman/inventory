@@ -15,7 +15,7 @@ namespace zacharysnewman.Inventory
     }
 
     /// <summary>
-    /// Defines the configuration for a container: its type, display name, maximum capacity, and capacity mode.
+    /// Defines the configuration for a container: its display name, accepted item types, capacity, and capacity mode.
     /// Create instances via Assets > Create > Inventory > Container Definition.
     /// Attach multiple definitions to an Inventory to give it different container slots.
     /// </summary>
@@ -24,10 +24,10 @@ namespace zacharysnewman.Inventory
     {
         public string displayName;
 
-        [Tooltip("The types of items this container accepts. Ignored when acceptsAllTypes is true.")]
-        public List<ContainerType> acceptedTypes = new List<ContainerType>();
+        [Tooltip("The item types this container accepts. Ignored when acceptsAllTypes is true.")]
+        public List<ItemType> acceptedTypes = new List<ItemType>();
 
-        [Tooltip("When true, this container accepts any item regardless of its compatibleContainerTypes. Use for general-purpose backpacks and grid inventories.")]
+        [Tooltip("When true, this container accepts any item regardless of its itemType. Use for general-purpose backpacks and grid inventories.")]
         public bool acceptsAllTypes = false;
 
         public int capacity;

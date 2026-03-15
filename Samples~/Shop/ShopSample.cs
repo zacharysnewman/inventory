@@ -15,7 +15,7 @@ using zacharysnewman.Inventory;
 ///     affordable and fittable quantity in one shot
 ///
 /// Attach to the same GameObject as an Inventory component.
-/// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
+/// Leave the Inventory's InventoryDefinition unassigned in the Inspector;
 /// this script builds everything in code for demonstration purposes.
 /// In a real project, create ScriptableObject assets via the Asset menu instead.
 /// </summary>
@@ -25,10 +25,10 @@ public class ShopSample : MonoBehaviour
     private Inventory _player;
 
     // ── Items ────────────────────────────────────────────────────────────────
-    private Item _gold;           // currency item — stackSize 999, lives in wallet
-    private Item _healthPotion;   //  10 gold — stackSize 5
-    private Item _manaPotion;     //  15 gold — stackSize 5
-    private Item _ironSword;      //  60 gold — stackSize 1
+    private ItemDefinition _gold;           // currency item — stackSize 999, lives in wallet
+    private ItemDefinition _healthPotion;   //  10 gold — stackSize 5
+    private ItemDefinition _manaPotion;     //  15 gold — stackSize 5
+    private ItemDefinition _ironSword;      //  60 gold — stackSize 1
 
     // Merchant buys items back at half their sell price
     private const int SellDivisor = 2;
@@ -84,7 +84,7 @@ public class ShopSample : MonoBehaviour
     /// <summary>
     /// Removes gold and adds the item if the player can afford it and has space.
     /// </summary>
-    private void TryBuy(Item item, int quantity, int goldCost)
+    private void TryBuy(ItemDefinition item, int quantity, int goldCost)
     {
         int total = goldCost * quantity;
         if (_player.GetItemCount(_gold) < total)
@@ -106,7 +106,7 @@ public class ShopSample : MonoBehaviour
     /// Removes <paramref name="quantity"/> of <paramref name="item"/> from the player's inventory
     /// and refunds half the item's gold cost. Models selling to a merchant.
     /// </summary>
-    private void SellItem(Item item, int quantity, int goldCost)
+    private void SellItem(ItemDefinition item, int quantity, int goldCost)
     {
         int refund = goldCost * quantity / SellDivisor;
         if (_player.TryRemoveItem(item, quantity))
@@ -124,7 +124,7 @@ public class ShopSample : MonoBehaviour
     /// Purchases as many of <paramref name="item"/> as the player can simultaneously afford
     /// and fit in their inventory. Returns the quantity purchased.
     /// </summary>
-    private int BuyAsManyAsPossible(Item item, int goldCost)
+    private int BuyAsManyAsPossible(ItemDefinition item, int goldCost)
     {
         int canFit    = _player.HowManyCanAdd(item);
         int canAfford = goldCost > 0 ? _player.GetItemCount(_gold) / goldCost : canFit;
@@ -168,9 +168,9 @@ public class ShopSample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, int stackSize = 1)
+    private static ItemDefinition MakeItem(string displayName, int stackSize = 1)
     {
-        var item = ScriptableObject.CreateInstance<Item>();
+        var item = ScriptableObject.CreateInstance<ItemDefinition>();
         item.displayName  = displayName;
         item.maxStackSize = stackSize;
         return item;

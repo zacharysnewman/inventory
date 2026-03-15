@@ -26,7 +26,7 @@ using zacharysnewman.Inventory;
 ///   6. Earning a heart container after defeating a boss
 ///
 /// Attach to the same GameObject as an Inventory component.
-/// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
+/// Leave the Inventory's InventoryDefinition unassigned in the Inspector;
 /// this script builds everything in code for demonstration purposes.
 /// In a real project, create ScriptableObject assets via the Asset menu instead.
 /// </summary>
@@ -51,14 +51,14 @@ public class ZeldaInventorySample : MonoBehaviour
     private ContainerDefinition _giantWallet;
 
     // ── Items ────────────────────────────────────────────────────────────────
-    private Item _rupee;
-    private Item _bomb;
-    private Item _arrow;
-    private Item _masterSword;
-    private Item _heroBow;
-    private Item _heartContainer;
-    private Item _bluePotion;
-    private Item _redPotion;
+    private ItemDefinition _rupee;
+    private ItemDefinition _bomb;
+    private ItemDefinition _arrow;
+    private ItemDefinition _masterSword;
+    private ItemDefinition _heroBow;
+    private ItemDefinition _heartContainer;
+    private ItemDefinition _bluePotion;
+    private ItemDefinition _redPotion;
 
     private void Start()
     {
@@ -116,7 +116,7 @@ public class ZeldaInventorySample : MonoBehaviour
 
     // ── Shop helper ───────────────────────────────────────────────────────────
 
-    private void TryBuy(Item item, int quantity, int costPerUnit)
+    private void TryBuy(ItemDefinition item, int quantity, int costPerUnit)
     {
         int totalCost = costPerUnit * quantity;
         if (_inventory.GetItemCount(_rupee) >= totalCost && _inventory.CanAddItem(item, quantity))
@@ -186,9 +186,9 @@ public class ZeldaInventorySample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, string type, int maxStackSize = 1)
+    private static ItemDefinition MakeItem(string displayName, string type, int maxStackSize = 1)
     {
-        var item = ScriptableObject.CreateInstance<Item>();
+        var item = ScriptableObject.CreateInstance<ItemDefinition>();
         item.displayName  = displayName;
         item.itemType     = type ?? string.Empty;
         item.maxStackSize = maxStackSize;

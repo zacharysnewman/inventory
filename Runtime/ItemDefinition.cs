@@ -4,10 +4,10 @@ namespace zacharysnewman.Inventory
 {
     /// <summary>
     /// Defines an item that can be stored in an inventory container.
-    /// Create instances via Assets > Create > Inventory > Item.
+    /// Create instances via Assets > Create > Inventory > Item Definition.
     /// </summary>
-    [CreateAssetMenu(fileName = "NewItem", menuName = "Inventory/Item")]
-    public class Item : ScriptableObject
+    [CreateAssetMenu(fileName = "NewItemDefinition", menuName = "Inventory/Item Definition")]
+    public class ItemDefinition : ScriptableObject
     {
         public string displayName;
 

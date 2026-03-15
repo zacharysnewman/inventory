@@ -14,15 +14,15 @@ namespace zacharysnewman.Inventory
         [SerializeField] private InventoryDefinition definition;
 
         private readonly List<Container> _containers = new List<Container>();
-        private readonly Dictionary<Item, int> _itemCounts = new Dictionary<Item, int>();
+        private readonly Dictionary<ItemDefinition, int> _itemCounts = new Dictionary<ItemDefinition, int>();
 
         // ── Events ───────────────────────────────────────────────────────────
 
         /// <summary>Raised after an item is successfully added. Reports the item and its new global count.</summary>
-        public event Action<Item, int> OnItemAdded;
+        public event Action<ItemDefinition, int> OnItemAdded;
 
         /// <summary>Raised after an item is successfully removed. Reports the item and its new global count.</summary>
-        public event Action<Item, int> OnItemRemoved;
+        public event Action<ItemDefinition, int> OnItemRemoved;
 
         /// <summary>Raised after a container is added at runtime.</summary>
         public event Action<Container> OnContainerAdded;
@@ -31,7 +31,7 @@ namespace zacharysnewman.Inventory
         public event Action<ContainerDefinition> OnContainerRemoved;
 
         /// <summary>Raised after an item is moved between two containers within this inventory. Reports the item, source container, and destination container.</summary>
-        public event Action<Item, Container, Container> OnItemMoved;
+        public event Action<ItemDefinition, Container, Container> OnItemMoved;
 
         private void Awake()
         {
@@ -132,7 +132,7 @@ namespace zacharysnewman.Inventory
         // ── Item Management ──────────────────────────────────────────────────
 
         /// <summary>Returns true if at least one container can accept <paramref name="quantity"/> of <paramref name="item"/>.</summary>
-        public bool CanAddItem(Item item, int quantity = 1)
+        public bool CanAddItem(ItemDefinition item, int quantity = 1)
         {
             foreach (var container in _containers)
                 if (container.CanAdd(item, quantity))
@@ -141,7 +141,7 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Returns the maximum quantity of <paramref name="item"/> that can currently be added across all containers.</summary>
-        public int HowManyCanAdd(Item item)
+        public int HowManyCanAdd(ItemDefinition item)
         {
             int total = 0;
             foreach (var container in _containers)
@@ -150,7 +150,7 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Adds <paramref name="quantity"/> of <paramref name="item"/> to the first container that accepts it.</summary>
-        public bool TryAddItem(Item item, int quantity = 1)
+        public bool TryAddItem(ItemDefinition item, int quantity = 1)
         {
             if (!CanAddItem(item, quantity)) return false;
             foreach (var container in _containers)
@@ -168,7 +168,7 @@ namespace zacharysnewman.Inventory
         /// <summary>
         /// Adds <paramref name="quantity"/> of <paramref name="item"/>, reporting why it failed via <paramref name="result"/>.
         /// </summary>
-        public bool TryAddItem(Item item, int quantity, out AddResult result)
+        public bool TryAddItem(ItemDefinition item, int quantity, out AddResult result)
         {
             AddResult bestFailure = AddResult.WrongType;
             foreach (var container in _containers)
@@ -189,7 +189,7 @@ namespace zacharysnewman.Inventory
         /// Adds as many of <paramref name="item"/> as possible across all containers, up to <paramref name="quantity"/>.
         /// Returns the number actually added.
         /// </summary>
-        public int AddAsManyAsPossible(Item item, int quantity = 1)
+        public int AddAsManyAsPossible(ItemDefinition item, int quantity = 1)
         {
             int remaining = quantity;
             foreach (var container in _containers)
@@ -207,7 +207,7 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Removes <paramref name="quantity"/> of <paramref name="item"/> from the first container that has it.</summary>
-        public bool TryRemoveItem(Item item, int quantity = 1)
+        public bool TryRemoveItem(ItemDefinition item, int quantity = 1)
         {
             foreach (var container in _containers)
             {
@@ -224,7 +224,7 @@ namespace zacharysnewman.Inventory
         /// <summary>
         /// Removes <paramref name="quantity"/> of <paramref name="item"/>, reporting why it failed via <paramref name="result"/>.
         /// </summary>
-        public bool TryRemoveItem(Item item, int quantity, out RemoveResult result)
+        public bool TryRemoveItem(ItemDefinition item, int quantity, out RemoveResult result)
         {
             foreach (var container in _containers)
             {
@@ -243,7 +243,7 @@ namespace zacharysnewman.Inventory
         /// Adds <paramref name="quantity"/> of <paramref name="item"/> directly into <paramref name="container"/>,
         /// which must belong to this inventory. Fires <see cref="OnItemAdded"/>.
         /// </summary>
-        public bool TryAddToContainer(Container container, Item item, int quantity = 1)
+        public bool TryAddToContainer(Container container, ItemDefinition item, int quantity = 1)
         {
             if (!_containers.Contains(container)) return false;
             if (!container.TryAdd(item, quantity)) return false;
@@ -256,7 +256,7 @@ namespace zacharysnewman.Inventory
         /// Removes <paramref name="quantity"/> of <paramref name="item"/> directly from <paramref name="container"/>,
         /// which must belong to this inventory. Fires <see cref="OnItemRemoved"/>.
         /// </summary>
-        public bool TryRemoveFromContainer(Container container, Item item, int quantity = 1)
+        public bool TryRemoveFromContainer(Container container, ItemDefinition item, int quantity = 1)
         {
             if (!_containers.Contains(container)) return false;
             if (!container.TryRemove(item, quantity)) return false;
@@ -269,7 +269,7 @@ namespace zacharysnewman.Inventory
         /// Moves <paramref name="quantity"/> of <paramref name="item"/> from <paramref name="from"/> to <paramref name="to"/>,
         /// both of which must belong to this inventory. Atomic — fires <see cref="OnItemMoved"/> on success.
         /// </summary>
-        public bool TryMoveItem(Container from, Container to, Item item, int quantity = 1)
+        public bool TryMoveItem(Container from, Container to, ItemDefinition item, int quantity = 1)
         {
             if (!_containers.Contains(from) || !_containers.Contains(to)) return false;
             if (!from.TryMoveTo(to, item, quantity)) return false;
@@ -280,7 +280,7 @@ namespace zacharysnewman.Inventory
         /// <summary>
         /// Returns all item stacks across all containers, optionally filtered by <paramref name="filter"/>.
         /// </summary>
-        public IEnumerable<ItemStack> GetItems(Func<Item, bool> filter = null)
+        public IEnumerable<ItemStack> GetItems(Func<ItemDefinition, bool> filter = null)
         {
             foreach (var container in _containers)
                 foreach (var stack in container.Stacks)
@@ -289,7 +289,7 @@ namespace zacharysnewman.Inventory
         }
 
         /// <summary>Returns the total count of <paramref name="item"/> across all containers.</summary>
-        public int GetItemCount(Item item)
+        public int GetItemCount(ItemDefinition item)
         {
             _itemCounts.TryGetValue(item, out int count);
             return count;
@@ -301,7 +301,7 @@ namespace zacharysnewman.Inventory
         /// Transfers <paramref name="quantity"/> of <paramref name="item"/> from this inventory into <paramref name="target"/>.
         /// Atomic — nothing changes if this inventory lacks the item or <paramref name="target"/> cannot accept it.
         /// </summary>
-        public bool TryTransferTo(Inventory target, Item item, int quantity = 1)
+        public bool TryTransferTo(Inventory target, ItemDefinition item, int quantity = 1)
         {
             if (GetItemCount(item) < quantity) return false;
             if (!target.CanAddItem(item, quantity)) return false;
@@ -314,14 +314,14 @@ namespace zacharysnewman.Inventory
         /// Transfers <paramref name="quantity"/> of <paramref name="item"/> from <paramref name="source"/> into this inventory.
         /// Convenience wrapper — delegates to <see cref="TryTransferTo"/>.
         /// </summary>
-        public bool TryTransferFrom(Inventory source, Item item, int quantity = 1)
+        public bool TryTransferFrom(Inventory source, ItemDefinition item, int quantity = 1)
             => source.TryTransferTo(this, item, quantity);
 
         /// <summary>
         /// Transfers all of <paramref name="item"/> (or all items if null) to <paramref name="target"/>.
         /// Returns the total quantity moved.
         /// </summary>
-        public int TryTransferAll(Inventory target, Item item = null)
+        public int TryTransferAll(Inventory target, ItemDefinition item = null)
         {
             int totalMoved = 0;
             if (item != null)
@@ -332,7 +332,7 @@ namespace zacharysnewman.Inventory
                 return totalMoved;
             }
 
-            var items = new HashSet<Item>();
+            var items = new HashSet<ItemDefinition>();
             foreach (var container in _containers)
                 foreach (var stack in container.Stacks)
                     items.Add(stack.item);
@@ -388,7 +388,7 @@ namespace zacharysnewman.Inventory
 
         // ── Helpers ──────────────────────────────────────────────────────────
 
-        private void UpdateItemCount(Item item, int delta)
+        private void UpdateItemCount(ItemDefinition item, int delta)
         {
             _itemCounts.TryGetValue(item, out int current);
             int newCount = current + delta;

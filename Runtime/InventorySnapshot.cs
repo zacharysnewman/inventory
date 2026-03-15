@@ -7,7 +7,7 @@ namespace zacharysnewman.Inventory
     /// A serializable point-in-time snapshot of an Inventory's state.
     /// Use <see cref="Inventory.Save"/> to capture and <see cref="Inventory.Load"/> to restore.
     ///
-    /// Container and Item fields are ScriptableObject asset references.
+    /// Container and ItemDefinition fields are ScriptableObject asset references.
     /// Unity's built-in serialization handles these correctly at edit-time and within a session.
     /// For cross-session file persistence, use a serializer that resolves ScriptableObjects
     /// by GUID (e.g. Addressables or a custom mapping layer) rather than JsonUtility.

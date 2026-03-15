@@ -5,12 +5,12 @@ using UnityEngine;
 using zacharysnewman.Inventory;
 
 /// <summary>
-/// Binds an Item to a TMP_Text that displays the item's current global count.
+/// Binds an ItemDefinition to a TMP_Text that displays the item's current global count.
 /// </summary>
 [Serializable]
 public class ItemCountBinding
 {
-    public Item item;
+    public ItemDefinition item;
     public TMP_Text text;
 }
 
@@ -52,7 +52,7 @@ public class InventoryRenderer : MonoBehaviour
 {
     [SerializeField] private Inventory inventory;
 
-    [Header("Item Counts")]
+    [Header("ItemDefinition Counts")]
     [Tooltip("Each entry drives one TMP_Text with the item's total count across all containers.")]
     [SerializeField] private List<ItemCountBinding> itemBindings = new List<ItemCountBinding>();
 
@@ -87,7 +87,7 @@ public class InventoryRenderer : MonoBehaviour
 
     // ── Event Handlers ────────────────────────────────────────────────────────
 
-    private void HandleItemChanged(Item item, int newCount)
+    private void HandleItemChanged(ItemDefinition item, int newCount)
     {
         foreach (var binding in itemBindings)
             if (binding.item == item && binding.text != null)

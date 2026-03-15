@@ -28,7 +28,7 @@ using zacharysnewman.Inventory;
 ///   5. Picking up a Large Backpack — unlocks the Tertiary slot
 ///
 /// Attach to the same GameObject as an Inventory component.
-/// Leave the Inventory's ContainerDefinitions list empty in the Inspector;
+/// Leave the Inventory's InventoryDefinition unassigned in the Inspector;
 /// this script builds everything in code for demonstration purposes.
 /// In a real project, create ScriptableObject assets via the Asset menu instead.
 /// </summary>
@@ -47,31 +47,31 @@ public class WarzoneInventorySample : MonoBehaviour
     private ContainerDefinition _backpackSlot;     // general; acceptsAllTypes, capacity = slots
 
     // ── Primary Weapons ───────────────────────────────────────────────────────
-    private Item _assaultRifle;
-    private Item _lmg;
-    private Item _sniperRifle;
+    private ItemDefinition _assaultRifle;
+    private ItemDefinition _lmg;
+    private ItemDefinition _sniperRifle;
 
     // ── Secondary Weapons ─────────────────────────────────────────────────────
-    private Item _smg;
-    private Item _pistol;
-    private Item _shotgun;
+    private ItemDefinition _smg;
+    private ItemDefinition _pistol;
+    private ItemDefinition _shotgun;
 
     // ── Tertiary Weapons ──────────────────────────────────────────────────────
-    private Item _rpg;
-    private Item _mortar;
+    private ItemDefinition _rpg;
+    private ItemDefinition _mortar;
 
     // ── Lethal / Tactical ─────────────────────────────────────────────────────
-    private Item _fragGrenade;
-    private Item _semtex;
-    private Item _smokeGrenade;
-    private Item _stunGrenade;
+    private ItemDefinition _fragGrenade;
+    private ItemDefinition _semtex;
+    private ItemDefinition _smokeGrenade;
+    private ItemDefinition _stunGrenade;
 
     // ── Armor ─────────────────────────────────────────────────────────────────
-    private Item _armorPlate;
+    private ItemDefinition _armorPlate;
 
     // ── General Items (no itemType — backpack only) ───────────────────────────
-    private Item _medKit;
-    private Item _contractTablet;
+    private ItemDefinition _medKit;
+    private ItemDefinition _contractTablet;
 
     private void Start()
     {
@@ -192,7 +192,7 @@ public class WarzoneInventorySample : MonoBehaviour
         Debug.Log("");
     }
 
-    private string Equipped(params Item[] items)
+    private string Equipped(params ItemDefinition[] items)
     {
         foreach (var item in items)
             if (_inventory.GetItemCount(item) > 0)
@@ -211,9 +211,9 @@ public class WarzoneInventorySample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, string type)
+    private static ItemDefinition MakeItem(string displayName, string type)
     {
-        var item = ScriptableObject.CreateInstance<Item>();
+        var item = ScriptableObject.CreateInstance<ItemDefinition>();
         item.displayName  = displayName;
         item.itemType     = type ?? string.Empty;
         item.maxStackSize = 1;

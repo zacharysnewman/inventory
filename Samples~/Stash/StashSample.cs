@@ -25,10 +25,10 @@ public class StashSample : MonoBehaviour
     private Inventory _stash;
 
     // ── Items ────────────────────────────────────────────────────────────────
-    private Item _goldGem;      // stackSize 10 — trade material
-    private Item _ironBar;      // stackSize 5  — crafting material
-    private Item _healthPotion; // stackSize 5  — consumable
-    private Item _ancientKey;   // stackSize 1  — quest item
+    private ItemDefinition _goldGem;      // stackSize 10 — trade material
+    private ItemDefinition _ironBar;      // stackSize 5  — crafting material
+    private ItemDefinition _healthPotion; // stackSize 5  — consumable
+    private ItemDefinition _ancientKey;   // stackSize 1  — quest item
 
     private void Start()
     {
@@ -149,9 +149,9 @@ public class StashSample : MonoBehaviour
         return d;
     }
 
-    private static Item MakeItem(string displayName, int stackSize = 1)
+    private static ItemDefinition MakeItem(string displayName, int stackSize = 1)
     {
-        var item = ScriptableObject.CreateInstance<Item>();
+        var item = ScriptableObject.CreateInstance<ItemDefinition>();
         item.displayName  = displayName;
         item.maxStackSize = stackSize;
         return item;

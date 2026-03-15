@@ -7,7 +7,7 @@ namespace zacharysnewman.Inventory
     /// Create instances via Assets > Create > Inventory > Item Definition.
     /// </summary>
     [CreateAssetMenu(fileName = "NewItemDefinition", menuName = "Inventory/Item Definition")]
-    public class ItemDefinition : ScriptableObject
+    public partial class ItemDefinition : ScriptableObject
     {
         public string displayName;
 

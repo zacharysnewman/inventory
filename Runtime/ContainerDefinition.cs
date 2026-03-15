@@ -20,7 +20,7 @@ namespace zacharysnewman.Inventory
     /// Attach multiple definitions to an Inventory to give it different container slots.
     /// </summary>
     [CreateAssetMenu(fileName = "NewContainerDefinition", menuName = "Inventory/Container Definition")]
-    public class ContainerDefinition : ScriptableObject
+    public partial class ContainerDefinition : ScriptableObject
     {
         public string displayName;
 

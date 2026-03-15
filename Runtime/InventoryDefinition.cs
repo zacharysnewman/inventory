@@ -9,7 +9,7 @@ namespace zacharysnewman.Inventory
     /// to an <see cref="Inventory"/> component to share the same layout across multiple prefabs.
     /// </summary>
     [CreateAssetMenu(fileName = "NewInventoryDefinition", menuName = "Inventory/Inventory Definition")]
-    public class InventoryDefinition : ScriptableObject
+    public partial class InventoryDefinition : ScriptableObject
     {
         public List<ContainerDefinition> containers = new List<ContainerDefinition>();
     }

@@ -87,11 +87,11 @@ public class InventoryRenderer : MonoBehaviour
 
     // ── Event Handlers ────────────────────────────────────────────────────────
 
-    private void HandleItemChanged(ItemDefinition item, int newCount)
+    private void HandleItemChanged(ItemDefinition item, int _)
     {
         foreach (var binding in itemBindings)
             if (binding.item == item && binding.text != null)
-                binding.text.text = newCount.ToString();
+                binding.text.text = inventory.GetItemCount(binding.item).ToString();
 
         // An item change can affect any container's displayed contents
         RefreshSlotContents();

@@ -18,10 +18,10 @@ namespace zacharysnewman.Inventory
 
         // ── Events ───────────────────────────────────────────────────────────
 
-        /// <summary>Raised after an item is successfully added. Reports the item and its new global count.</summary>
+        /// <summary>Raised after an item is successfully added. Reports the item and the quantity added.</summary>
         public event Action<ItemDefinition, int> OnItemAdded;
 
-        /// <summary>Raised after an item is successfully removed. Reports the item and its new global count.</summary>
+        /// <summary>Raised after an item is successfully removed. Reports the item and the quantity removed.</summary>
         public event Action<ItemDefinition, int> OnItemRemoved;
 
         /// <summary>Raised after a container is added at runtime.</summary>
@@ -95,7 +95,7 @@ namespace zacharysnewman.Inventory
             foreach (var stack in overflow)
             {
                 UpdateItemCount(stack.item, -stack.quantity);
-                OnItemRemoved?.Invoke(stack.item, GetItemCount(stack.item));
+                OnItemRemoved?.Invoke(stack.item, stack.quantity);
             }
 
             OnContainerAdded?.Invoke(replacement);
@@ -158,7 +158,7 @@ namespace zacharysnewman.Inventory
                 if (container.TryAdd(item, quantity))
                 {
                     UpdateItemCount(item, quantity);
-                    OnItemAdded?.Invoke(item, GetItemCount(item));
+                    OnItemAdded?.Invoke(item, quantity);
                     return true;
                 }
             }
@@ -176,7 +176,7 @@ namespace zacharysnewman.Inventory
                 if (container.TryAdd(item, quantity, out result))
                 {
                     UpdateItemCount(item, quantity);
-                    OnItemAdded?.Invoke(item, GetItemCount(item));
+                    OnItemAdded?.Invoke(item, quantity);
                     return true;
                 }
                 if (result == AddResult.NoSpace) bestFailure = AddResult.NoSpace;
@@ -201,7 +201,7 @@ namespace zacharysnewman.Inventory
             if (totalAdded > 0)
             {
                 UpdateItemCount(item, totalAdded);
-                OnItemAdded?.Invoke(item, GetItemCount(item));
+                OnItemAdded?.Invoke(item, totalAdded);
             }
             return totalAdded;
         }
@@ -214,7 +214,7 @@ namespace zacharysnewman.Inventory
                 if (container.TryRemove(item, quantity))
                 {
                     UpdateItemCount(item, -quantity);
-                    OnItemRemoved?.Invoke(item, GetItemCount(item));
+                    OnItemRemoved?.Invoke(item, quantity);
                     return true;
                 }
             }
@@ -231,7 +231,7 @@ namespace zacharysnewman.Inventory
                 if (container.TryRemove(item, quantity, out result))
                 {
                     UpdateItemCount(item, -quantity);
-                    OnItemRemoved?.Invoke(item, GetItemCount(item));
+                    OnItemRemoved?.Invoke(item, quantity);
                     return true;
                 }
             }
@@ -248,7 +248,7 @@ namespace zacharysnewman.Inventory
             if (!_containers.Contains(container)) return false;
             if (!container.TryAdd(item, quantity)) return false;
             UpdateItemCount(item, quantity);
-            OnItemAdded?.Invoke(item, GetItemCount(item));
+            OnItemAdded?.Invoke(item, quantity);
             return true;
         }
 
@@ -261,7 +261,7 @@ namespace zacharysnewman.Inventory
             if (!_containers.Contains(container)) return false;
             if (!container.TryRemove(item, quantity)) return false;
             UpdateItemCount(item, -quantity);
-            OnItemRemoved?.Invoke(item, GetItemCount(item));
+            OnItemRemoved?.Invoke(item, quantity);
             return true;
         }
 

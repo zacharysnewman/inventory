@@ -18,6 +18,12 @@ namespace zacharysnewman.Inventory
         /// </summary>
         public event Action OnChanged;
 
+        /// <summary>Raised after items are successfully added to this container. Reports the item and quantity added.</summary>
+        public event Action<ItemDefinition, int> OnItemAdded;
+
+        /// <summary>Raised after items are successfully removed from this container. Reports the item and quantity removed.</summary>
+        public event Action<ItemDefinition, int> OnItemRemoved;
+
         private readonly List<ItemStack> _stacks = new List<ItemStack>();
 
         public IReadOnlyList<ItemStack> Stacks => _stacks;
@@ -101,6 +107,7 @@ namespace zacharysnewman.Inventory
                 remaining -= toAdd;
             }
 
+            OnItemAdded?.Invoke(item, quantity);
             OnChanged?.Invoke();
             return true;
         }
@@ -146,6 +153,7 @@ namespace zacharysnewman.Inventory
                     _stacks.RemoveAt(i);
             }
 
+            OnItemRemoved?.Invoke(item, quantity);
             OnChanged?.Invoke();
             return true;
         }
